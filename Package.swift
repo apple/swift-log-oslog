@@ -15,7 +15,6 @@ let package = Package(
             name: "SensitivityAttribute",
             dependencies: [
                 .product(name: "Logging", package: "swift-log")
-            ]
             ],
             exclude: ["SensitivityAttribute.docc"]
         ),
