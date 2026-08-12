@@ -5,8 +5,7 @@ import PackageDescription
 let package = Package(
     name: "swift-log-oslog",
     products: [
-        .library(name: "SensitivityAttribute", targets: ["SensitivityAttribute"]),
-        .library(name: "OSLogHandler", targets: ["OSLogHandler"]),
+        .library(name: "SensitivityAttribute", targets: ["SensitivityAttribute"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-log.git", from: "1.6.0")
@@ -16,29 +15,13 @@ let package = Package(
             name: "SensitivityAttribute",
             dependencies: [
                 .product(name: "Logging", package: "swift-log")
-            ],
-            exclude: ["SensitivityAttribute.docc"]
-        ),
-        .target(
-            name: "OSLogHandler",
-            dependencies: [
-                "SensitivityAttribute",
-                .product(name: "Logging", package: "swift-log"),
-            ],
-            exclude: ["OSLogHandler.docc"]
+            ]
         ),
         .testTarget(
             name: "SensitivityAttributeTests",
             dependencies: [
                 "SensitivityAttribute",
                 .product(name: "InMemoryLogging", package: "swift-log"),
-            ],
-        ),
-        .testTarget(
-            name: "OSLogHandlerTests",
-            dependencies: [
-                "OSLogHandler",
-                "SensitivityAttribute",
             ],
         ),
     ]
