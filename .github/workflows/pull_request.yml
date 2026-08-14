@@ -40,6 +40,13 @@ jobs:
     # Workaround https://github.com/nektos/act/issues/1875
     uses: apple/swift-nio/.github/workflows/static_sdk.yml@main
 
+  macos-benchmarks:
+    name: macOS benchmarks
+    uses: apple/swift-nio/.github/workflows/macos_benchmarks.yml@main
+    with:
+      benchmark_package_paths: '["Benchmarks/OSLog", "Benchmarks/Redaction"]'
+      macos_swift_6_3_enabled: true
+
   macos-tests:
     name: macOS tests
     uses: apple/swift-nio/.github/workflows/macos_tests.yml@main
