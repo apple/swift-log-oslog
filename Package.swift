@@ -6,7 +6,7 @@ let package = Package(
     name: "swift-log-oslog",
     products: [
         .library(
-            name: "swift-log-oslog",
+            name: "swift_log_oslog",
             targets: ["swift_log_oslog"]
         ),
     ],
