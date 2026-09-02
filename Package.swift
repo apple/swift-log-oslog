@@ -8,7 +8,7 @@ let package = Package(
         .library(
             name: "swift_log_oslog",
             targets: ["swift_log_oslog"]
-        ),
+        )
     ],
     targets: [
         .target(
