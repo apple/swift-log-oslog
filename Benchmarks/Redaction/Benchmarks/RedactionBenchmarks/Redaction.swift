@@ -18,8 +18,8 @@ import SensitivityAttribute
 
 // MARK: - Support handlers
 
-/// A terminal handler that consumes the (possibly redacted) metadata through `blackHole`, so the redaction work on
-/// the way in cannot be optimized away.
+/// A terminal handler that consumes the (possibly redacted) metadata through `blackHole`, so the redaction
+/// work on the way in cannot be optimized away.
 struct SinkLogHandler: LogHandler {
     var logLevel: Logger.Level = .trace
     var metadata: Logger.Metadata = [:]
@@ -35,8 +35,9 @@ struct SinkLogHandler: LogHandler {
 
 // MARK: - Fixtures
 
-/// Builds `count` metadata entries, the first `publicOutOf` tagged `.public` (passed through) and the rest
-/// `.sensitive` (redacted). `publicOutOf == count` → nothing is redacted; `publicOutOf == 0` → everything is.
+/// Builds `count` metadata entries. The first `publicOutOf` are tagged `.public` and pass through. The rest
+/// are `.sensitive` and get redacted. `publicOutOf == count` redacts nothing. `publicOutOf == 0` redacts
+/// everything.
 func makeMetadata(count: Int, publicOutOf: Int) -> Logger.Metadata {
     var metadata = Logger.Metadata()
     for i in 0..<count {
@@ -61,8 +62,9 @@ func makeEvent(metadata: Logger.Metadata) -> LogEvent {
 // MARK: - Benchmarks
 
 public let benchmarks: @Sendable () -> Void = {
-    // Instructions + allocations; allocation count is the headline, so a regression that reintroduces a redundant copy
-    // shows up immediately. Built here rather than as a global `let` because `Benchmark.Configuration` is not Sendable.
+    // Instructions and allocations. Allocation count is the headline, so a regression that reintroduces a
+    // redundant copy shows up immediately. Built here, not as a global `let`, because `Benchmark.Configuration`
+    // is not Sendable.
     let redactionConfig = Benchmark.Configuration(
         metrics: [.instructions, .objectAllocCount],
         maxIterations: 100_000

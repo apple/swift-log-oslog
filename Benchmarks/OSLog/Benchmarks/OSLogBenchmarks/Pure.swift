@@ -15,28 +15,28 @@
 import Benchmark
 import os
 
-/// Pure `os.Logger` baseline: a native argument, no swift-log. The fully-optimized os_log path everything else is
-/// measured against.
+/// Pure `os.Logger` baseline: a native argument, no swift-log. The fully optimized os_log path everything
+/// else is measured against.
 func pureBenchmarks(configuration: Benchmark.Configuration) {
     let osLogger = os.Logger(subsystem: "com.example.applelogbench", category: "pure")
     Benchmark("pure_oslog", configuration: configuration) { _ in
         osLogger.info("req \(42, privacy: .public)")
     }
 
-    // The same os.Logger, but logging a *runtime* String — a dynamic `%{public}s` argument — instead of a native
-    // scalar. This isolates the one allocation the bridge shows on a no-metadata log: os_log allocates to serialize a
-    // dynamic string argument, whereas `pure_oslog`'s folded static format + native integer allocates nothing. It is
-    // not swift-log's doing — the bridge simply hands os_log the (runtime `String`) message. Expect this to match the
-    // bridge's allocation count, not `pure_oslog`'s.
+    // The same os.Logger, but logging a runtime String, as a dynamic `%{public}s` argument, instead of a
+    // native scalar. This isolates the one allocation the bridge shows on a no-metadata log: os_log allocates
+    // to serialize a dynamic string argument, while `pure_oslog`'s folded static format and native integer
+    // allocate nothing. That allocation is os_log's doing, not swift-log's: the bridge just hands os_log the
+    // message as a runtime `String`. Expect this to match the bridge's allocation count, not `pure_oslog`'s.
     let dynamicMessage = CommandLine.arguments.first ?? "req"
     Benchmark("pure_oslog_dynamic_string", configuration: configuration) { _ in
         osLogger.log(level: .info, "\(dynamicMessage, privacy: .public)")
     }
 
-    // the pure-os_log "equivalent" of `bridge_scope_large_base_multiple_emissions`. os.Logger has no scoped
-    // metadata (no `mergingMetadata`), so the 24 context fields the bridge attaches once must be re-specified inline —
-    // as 24 dynamic `%{public}s` arguments — on every one of the 10 emissions. (os_log may truncate the rendered line
-    // at runtime, but the packing cost of the 24 arguments is what's measured.)
+    // The pure-os_log equivalent of `bridge_scope_large_base_multiple_emissions`. `os.Logger` has no scoped
+    // metadata, no `mergingMetadata`, so this re-specifies the 24 context fields the bridge attaches once, as
+    // 24 dynamic `%{public}s` arguments, on every one of the 10 emissions. os_log may truncate the rendered
+    // line at runtime, but what this measures is the packing cost of the 24 arguments.
     let ctx = (0..<24).map { "value-\($0)" }
     let id = CommandLine.arguments.count
     Benchmark("pure_oslog_repeated_context_multiple_emissions", configuration: configuration) { _ in
