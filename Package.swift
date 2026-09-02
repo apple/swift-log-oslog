@@ -6,7 +6,7 @@ let package = Package(
     name: "swift-log-oslog",
     products: [
         .library(name: "SensitivityAttribute", targets: ["SensitivityAttribute"]),
-        .library(name: "OSLogHandler", targets: ["OSLogHandler"])
+        .library(name: "OSLogHandler", targets: ["OSLogHandler"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-log.git", from: "1.6.0")
