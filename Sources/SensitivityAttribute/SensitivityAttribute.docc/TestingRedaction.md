@@ -44,14 +44,14 @@ func redactsUserID() {
     let explicitSink = InMemoryLogHandler()
     let explicitLogger = Logger(
         label: "test",
-        factory: { _ in RedactionLogHandler(mode: .redacting, wrapping: explicitSink) }
+        factory: { _ in RedactionLogHandler(wrapping: explicitSink) }
     )
     LoginService().login(userID: "u-123", logger: explicitLogger)
     #expect(explicitSink.entries[0].metadata["user.id"]?.description == "<redacted>")
     #expect(explicitSink.entries[0].metadata["action"]?.description == "password")
 
     let taskLocalSink = InMemoryLogHandler()
-    withLogger(handler: RedactionLogHandler(mode: .redacting, wrapping: taskLocalSink)) { _ in
+    withLogger(handler: RedactionLogHandler(wrapping: taskLocalSink)) { _ in
         LoginService().login(userID: "u-123")
     }
     #expect(taskLocalSink.entries[0].metadata["user.id"]?.description == "<redacted>")

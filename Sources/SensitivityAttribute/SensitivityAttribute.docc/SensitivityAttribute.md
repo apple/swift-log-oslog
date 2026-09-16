@@ -6,9 +6,9 @@ Classify metadata values by sensitivity, so a handler can decide what to forward
 
 - ``Sensitivity`` is an attribute with two cases, `.public` and `.sensitive`, that conforms to `Logger.MetadataValueAttributes.Attribute`. 
 Apply it within string interpolation (`"\(value, sensitivity: .public)"`) or the `.attributed` factory.
-- ``RedactionLogHandler`` wraps another `LogHandler` to apply the redaction strategy you choose with `mode`.
-  With the mode ``RedactionMode/redacting``, it rewrites every metadata entry not tagged ``Sensitivity/public`` to `"<redacted>"` before it reaches the wrapped handler.
-  When you use the mode ``RedactionMode/passthrough``, it forwards every event unchanged.
+- ``RedactionLogHandler`` wraps another `LogHandler` to redact sensitive metadata.
+  It rewrites every metadata entry not tagged ``Sensitivity/public`` to `"<redacted>"` before it reaches the
+  wrapped handler.
 
 ## Usage
 
@@ -18,7 +18,6 @@ import SensitivityAttribute
 
 let redactingLogger = Logger(label: "app", factory: { label in
     RedactionLogHandler(
-        mode: .redacting,
         wrapping: StreamLogHandler.standardOutput(label: label)
     )
 })
@@ -29,8 +28,8 @@ redactingLogger.info("I am doing stuff", metadata: [
 ])
 ```
 
-Use ``RedactionMode/passthrough`` in a development build to make the same handler graph forward
-sensitive values unchanged.
+In a development build, install the underlying handler directly, without wrapping it in a
+``RedactionLogHandler``, to forward sensitive values unchanged.
 
 ## Topics
 
@@ -38,7 +37,6 @@ sensitive values unchanged.
 
 - ``Sensitivity``
 - ``RedactionLogHandler``
-- ``RedactionMode``
 
 ### Best practices
 

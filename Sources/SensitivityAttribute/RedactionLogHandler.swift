@@ -17,30 +17,19 @@ public import Logging
 /// The fixed string written in place of a redacted metadata value.
 private var redactionMarker: Logger.MetadataValue { "<redacted>" }
 
-/// Whether a ``RedactionLogHandler`` redacts sensitive metadata or forwards events unchanged.
-public enum RedactionMode: Sendable {
-    /// Replace every metadata value not tagged ``Sensitivity/public`` with the redaction marker.
-    case redacting
-
-    /// Forward every event unchanged.
-    case passthrough
-}
-
-/// A log handler that wraps another to provide redaction.
+/// A log handler that wraps another to redact sensitive metadata.
 ///
-/// The handler is controlled by it's ``RedactionMode`` which either redacts sensitive metadata before forwarding or
-/// forwards events unchanged.
-/// You set the `RedactionMode` of the handler when you construct it:
-///
-/// - ``RedactionMode/redacting``: rewrites every metadata entry not tagged ``Sensitivity/public`` to the redaction
-///   marker (`"<redacted>"`) before forwarding the values to the wrapped `Underlying` handler.
-///   Untagged entries count as treated as sensitive, which redacts them by default.
-/// - ``RedactionMode/passthrough``: forwards every event transparently.
+/// The handler rewrites every metadata entry not tagged ``Sensitivity/public`` to the redaction marker
+/// (`"<redacted>"`) before forwarding the values to the wrapped `Underlying` handler. Untagged entries count as
+/// sensitive, which redacts them by default.
 ///
 /// ```swift
 /// let console = StreamLogHandler.standardOutput(label: "console")
-/// let handler = RedactionLogHandler(mode: .redacting, wrapping: console)
+/// let handler = RedactionLogHandler(wrapping: console)
 /// ```
+///
+/// To forward events without redaction, for example in a development build, install `console` directly instead
+/// of wrapping it in a `RedactionLogHandler`.
 ///
 /// ## Log level
 ///
@@ -53,9 +42,6 @@ public enum RedactionMode: Sendable {
 /// A sensitive entry is replaced with the string `"<redacted>"`. Its attributes are dropped along with its
 /// value, so a redacted entry cannot be re-classified or recovered downstream.
 public struct RedactionLogHandler<Underlying: LogHandler>: LogHandler {
-    /// Redaction mode.
-    public let mode: RedactionMode
-
     /// Wrapped `LogHandler`.
     private var underlying: Underlying
 
@@ -75,10 +61,9 @@ public struct RedactionLogHandler<Underlying: LogHandler>: LogHandler {
         }
     }
 
-    /// The base ``metadata``, already redacted and cached. This avoids recomputing it on every emission. In
-    /// `.redacting` mode, a log with no emission-time metadata forwards this directly. A log that carries
-    /// emission-time metadata redacts only that metadata, then merges it on top. The base never gets
-    /// re-redacted per log.
+    /// The base ``metadata``, already redacted and cached. This avoids recomputing it on every emission. A log
+    /// with no emission-time metadata forwards this directly. A log that carries emission-time metadata
+    /// redacts only that metadata, then merges it on top. The base never gets re-redacted per log.
     private var redactedBaseMetadata: Logger.Metadata = [:]
 
     public var metadataProvider: Logger.MetadataProvider?
@@ -86,29 +71,20 @@ public struct RedactionLogHandler<Underlying: LogHandler>: LogHandler {
     /// Creates a redaction wrapper around another handler that you provide.
     ///
     /// - Parameters:
-    ///   - mode: ``RedactionMode/redacting`` or ``RedactionMode/passthrough``. Fixed for the lifetime of the
-    ///     wrapper.
     ///   - underlying: The handler that receives events after redaction.
     ///   - metadataProvider: An optional metadata provider. Its output merges into every event before
     ///     redaction.
     public init(
-        mode: RedactionMode,
         wrapping underlying: Underlying,
         metadataProvider: Logger.MetadataProvider? = nil
     ) {
-        self.mode = mode
         self.underlying = underlying
         self.metadataProvider = metadataProvider
     }
 
     public func log(event: LogEvent) {
         var routedEvent = event
-        switch self.mode {
-        case .redacting:
-            routedEvent.metadata = self.redactedMetadata(forEmission: event.metadata)
-        case .passthrough:
-            routedEvent.metadata = self.mergedMetadata(forEmission: event.metadata)
-        }
+        routedEvent.metadata = self.redactedMetadata(forEmission: event.metadata)
         self.underlying.log(event: routedEvent)
     }
 
@@ -117,7 +93,7 @@ public struct RedactionLogHandler<Underlying: LogHandler>: LogHandler {
         set { self.metadata[key] = newValue }
     }
 
-    /// The metadata forwarded in `.redacting` mode. It combines the cached redacted base with the redacted
+    /// The metadata forwarded with every event. It combines the cached redacted base with the redacted
     /// emission-time metadata. Emission-time metadata wins on key conflicts.
     private func redactedMetadata(forEmission eventMetadata: Logger.Metadata?) -> Logger.Metadata? {
         guard let emission = self.emissionTimeMetadata(eventMetadata) else {
@@ -133,25 +109,10 @@ public struct RedactionLogHandler<Underlying: LogHandler>: LogHandler {
         return combined
     }
 
-    /// The metadata forwarded in `.passthrough` mode, unredacted. It combines the base with the emission-time
-    /// metadata. Emission-time metadata wins on key conflicts.
-    private func mergedMetadata(forEmission eventMetadata: Logger.Metadata?) -> Logger.Metadata? {
-        guard let emission = self.emissionTimeMetadata(eventMetadata) else {
-            // No emission-time metadata. Forward the base directly.
-            return self.metadata.isEmpty ? nil : self.metadata
-        }
-        if self.metadata.isEmpty {
-            return emission
-        }
-        var combined = self.metadata
-        combined.merge(emission, uniquingKeysWith: { _, emitted in emitted })
-        return combined
-    }
-
     /// The emission-time metadata: the provider's output merged with the event's own metadata, where the event
     /// wins on conflicts. This is the metadata supplied at the log call.
     /// Returns `nil` when there is none. This excludes base metadata on purpose. The base is handled through
-    /// the cached `redactedBaseMetadata`, or merged separately in passthrough mode.
+    /// the cached `redactedBaseMetadata`.
     private func emissionTimeMetadata(_ eventMetadata: Logger.Metadata?) -> Logger.Metadata? {
         var emission = Logger.Metadata()
         if let provided = self.metadataProvider?.get(), !provided.isEmpty {

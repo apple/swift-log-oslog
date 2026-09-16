@@ -24,7 +24,7 @@ struct RedactionLogHandlerTests {
     func redactsSensitiveAndUntaggedButKeepsPublic() throws {
         let sink = RecordingLogHandler()
         let logger = Logger(label: "test") { _ in
-            RedactionLogHandler(mode: .redacting, wrapping: sink)
+            RedactionLogHandler(wrapping: sink)
         }
 
         logger.info(
@@ -45,34 +45,10 @@ struct RedactionLogHandlerTests {
     }
 
     @Test
-    func passThroughForwardsEverythingUnchangedWhenNotRedacting() throws {
-        let sink = RecordingLogHandler()
-        let logger = Logger(label: "test") { _ in
-            RedactionLogHandler(mode: .passthrough, wrapping: sink)
-        }
-
-        logger.info(
-            "request",
-            metadata: [
-                "method": .attributed("GET", attributes: [Sensitivity.public]),
-                "user_id": .attributed("u-123", attributes: [Sensitivity.sensitive]),
-                "client_ip": "203.0.113.5",
-            ]
-        )
-
-        let event = try #require(sink.events.first)
-        #expect(event.metadata?["method"]?.description == "GET")
-        #expect(event.metadata?["user_id"]?.description == "u-123")
-        #expect(event.metadata?["client_ip"]?.description == "203.0.113.5")
-        // Sensitivity attribute survives pass-through.
-        #expect(event.metadata?["user_id"]?.attributes[Sensitivity.self] == .sensitive)
-    }
-
-    @Test
     func baseMetadataIsMergedAndRedacted() throws {
         let sink = RecordingLogHandler()
         var logger = Logger(label: "test") { _ in
-            RedactionLogHandler(mode: .redacting, wrapping: sink)
+            RedactionLogHandler(wrapping: sink)
         }
         logger[metadataKey: "session"] = .attributed("s-1", attributes: [Sensitivity.sensitive])
         logger[metadataKey: "build"] = .attributed("release", attributes: [Sensitivity.public])
@@ -85,24 +61,10 @@ struct RedactionLogHandlerTests {
     }
 
     @Test
-    func baseMetadataPassesThroughWhenNotRedacting() throws {
-        let sink = RecordingLogHandler()
-        var logger = Logger(label: "test") { _ in
-            RedactionLogHandler(mode: .passthrough, wrapping: sink)
-        }
-        logger[metadataKey: "session"] = .attributed("s-1", attributes: [Sensitivity.sensitive])
-
-        logger.info("boot")
-
-        let event = try #require(sink.events.first)
-        #expect(event.metadata?["session"]?.description == "s-1")
-    }
-
-    @Test
     func emptyMetadataForwardsAsNil() throws {
         let sink = RecordingLogHandler()
         let logger = Logger(label: "test") { _ in
-            RedactionLogHandler(mode: .redacting, wrapping: sink)
+            RedactionLogHandler(wrapping: sink)
         }
 
         logger.info("ping")
@@ -115,7 +77,7 @@ struct RedactionLogHandlerTests {
     func logLevelReadsThroughToUnderlyingAtConstruction() {
         let sink = RecordingLogHandler(logLevel: .warning)
         let logger = Logger(label: "test") { _ in
-            RedactionLogHandler(mode: .redacting, wrapping: sink)
+            RedactionLogHandler(wrapping: sink)
         }
         #expect(logger.logLevel == .warning)
     }
@@ -123,7 +85,7 @@ struct RedactionLogHandlerTests {
     @Test
     func settingWrapperLogLevelWritesThroughToUnderlying() {
         var logger = Logger(label: "test") { _ in
-            RedactionLogHandler(mode: .redacting, wrapping: InMemoryLogHandler())
+            RedactionLogHandler(wrapping: InMemoryLogHandler())
         }
         logger.logLevel = .critical
         // The wrapper holds its own copy of a struct Underlying, so only the wrapper's own getter can show
@@ -141,7 +103,7 @@ struct RedactionLogHandlerTests {
         // silently, one layer in.
         let sink = RecordingLogHandler(logLevel: .info)
         var logger = Logger(label: "test") { _ in
-            RedactionLogHandler(mode: .redacting, wrapping: MultiplexLogHandler([sink]))
+            RedactionLogHandler(wrapping: MultiplexLogHandler([sink]))
         }
 
         logger.logLevel = .trace
@@ -154,7 +116,7 @@ struct RedactionLogHandlerTests {
     func baseAndEventMetadataAreCombined() throws {
         let sink = RecordingLogHandler()
         var logger = Logger(label: "test") { _ in
-            RedactionLogHandler(mode: .redacting, wrapping: sink)
+            RedactionLogHandler(wrapping: sink)
         }
         logger[metadataKey: "build"] = .attributed("release", attributes: [Sensitivity.public])
         logger[metadataKey: "session"] = .attributed("s-1", attributes: [Sensitivity.sensitive])
@@ -178,18 +140,17 @@ struct RedactionLogHandlerTests {
     func eventMetadataOverridesBaseOnKeyCollision() throws {
         let sink = RecordingLogHandler()
         var logger = Logger(label: "test") { _ in
-            RedactionLogHandler(mode: .passthrough, wrapping: sink)
+            RedactionLogHandler(wrapping: sink)
         }
         logger[metadataKey: "user_id"] = .attributed("base", attributes: [Sensitivity.public])
 
         logger.info(
             "request",
-            metadata: ["user_id": .attributed("event", attributes: [Sensitivity.sensitive])]
+            metadata: ["user_id": .attributed("event", attributes: [Sensitivity.public])]
         )
 
         let event = try #require(sink.events.first)
         #expect(event.metadata?["user_id"]?.description == "event")
-        #expect(event.metadata?["user_id"]?.attributes[Sensitivity.self] == .sensitive)
     }
 
     @Test
@@ -202,7 +163,7 @@ struct RedactionLogHandlerTests {
             ]
         }
         let logger = Logger(label: "test") { _ in
-            RedactionLogHandler(mode: .redacting, wrapping: sink, metadataProvider: provider)
+            RedactionLogHandler(wrapping: sink, metadataProvider: provider)
         }
 
         logger.info("request")
@@ -213,30 +174,13 @@ struct RedactionLogHandlerTests {
     }
 
     @Test
-    func metadataProviderOutputPassesThroughWhenNotRedacting() throws {
-        let sink = RecordingLogHandler()
-        let provider = Logger.MetadataProvider {
-            ["auth_token": .attributed("secret", attributes: [Sensitivity.sensitive])]
-        }
-        let logger = Logger(label: "test") { _ in
-            RedactionLogHandler(mode: .passthrough, wrapping: sink, metadataProvider: provider)
-        }
-
-        logger.info("request")
-
-        let event = try #require(sink.events.first)
-        #expect(event.metadata?["auth_token"]?.description == "secret")
-        #expect(event.metadata?["auth_token"]?.attributes[Sensitivity.self] == .sensitive)
-    }
-
-    @Test
     func eventMetadataOverridesMetadataProviderOnKeyCollision() throws {
         let sink = RecordingLogHandler()
         let provider = Logger.MetadataProvider {
             ["trace_id": .attributed("from-provider", attributes: [Sensitivity.public])]
         }
         let logger = Logger(label: "test") { _ in
-            RedactionLogHandler(mode: .passthrough, wrapping: sink, metadataProvider: provider)
+            RedactionLogHandler(wrapping: sink, metadataProvider: provider)
         }
 
         logger.info(
@@ -255,7 +199,7 @@ struct RedactionLogHandlerTests {
             ["request_id": .attributed("from-provider", attributes: [Sensitivity.public])]
         }
         var logger = Logger(label: "test") { _ in
-            RedactionLogHandler(mode: .passthrough, wrapping: sink, metadataProvider: provider)
+            RedactionLogHandler(wrapping: sink, metadataProvider: provider)
         }
         logger[metadataKey: "request_id"] = .attributed("from-base", attributes: [Sensitivity.public])
 
@@ -270,7 +214,7 @@ struct RedactionLogHandlerTests {
         let sink = RecordingLogHandler()
         let provider = Logger.MetadataProvider { [:] }
         let logger = Logger(label: "test") { _ in
-            RedactionLogHandler(mode: .redacting, wrapping: sink, metadataProvider: provider)
+            RedactionLogHandler(wrapping: sink, metadataProvider: provider)
         }
 
         logger.info(
@@ -288,7 +232,7 @@ struct RedactionLogHandlerTests {
         let sink = RecordingLogHandler()
         let provider = Logger.MetadataProvider { [:] }
         let logger = Logger(label: "test") { _ in
-            RedactionLogHandler(mode: .redacting, wrapping: sink, metadataProvider: provider)
+            RedactionLogHandler(wrapping: sink, metadataProvider: provider)
         }
 
         logger.info("ping", metadata: [:])
@@ -301,7 +245,7 @@ struct RedactionLogHandlerTests {
     func metadataKeySubscriptGetReturnsSetValue() {
         let sink = RecordingLogHandler()
         var logger = Logger(label: "test") { _ in
-            RedactionLogHandler(mode: .redacting, wrapping: sink)
+            RedactionLogHandler(wrapping: sink)
         }
         logger[metadataKey: "k"] = .attributed("v", attributes: [Sensitivity.public])
         #expect(logger[metadataKey: "k"]?.description == "v")
