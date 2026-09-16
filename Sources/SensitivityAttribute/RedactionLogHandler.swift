@@ -61,9 +61,7 @@ public struct RedactionLogHandler<Underlying: LogHandler>: LogHandler {
         }
     }
 
-    /// The base ``metadata``, already redacted and cached. This avoids recomputing it on every emission. A log
-    /// with no emission-time metadata forwards this directly. A log that carries emission-time metadata
-    /// redacts only that metadata, then merges it on top. The base never gets re-redacted per log.
+    /// The base ``metadata``, already redacted and cached. This avoids recomputing it on every emission.
     private var redactedBaseMetadata: Logger.Metadata = [:]
 
     public var metadataProvider: Logger.MetadataProvider?
