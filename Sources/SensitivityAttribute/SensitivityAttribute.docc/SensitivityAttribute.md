@@ -29,7 +29,7 @@ redactingLogger.info("I am doing stuff", metadata: [
 ])
 ```
 
-Use ``RedactionLogHandler/Mode/passthrough`` in a development build to make the same handler graph forward
+Use ``RedactionMode/passthrough`` in a development build to make the same handler graph forward
 sensitive values unchanged.
 
 ## Topics
@@ -38,6 +38,7 @@ sensitive values unchanged.
 
 - ``Sensitivity``
 - ``RedactionLogHandler``
+- ``RedactionMode``
 
 ### Best practices
 

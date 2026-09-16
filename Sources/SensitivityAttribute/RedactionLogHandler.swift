@@ -14,6 +14,15 @@
 
 public import Logging
 
+/// Whether a ``RedactionLogHandler`` redacts sensitive metadata or forwards events unchanged.
+public enum RedactionMode: Sendable {
+    /// Replace every metadata value not tagged ``Sensitivity/public`` with the redaction marker.
+    case redacting
+
+    /// Forward every event unchanged.
+    case passthrough
+}
+
 /// A log handler that wraps another to provide redaction.
 ///
 /// The handler is controlled by it's ``Mode`` which either redacts sensitive metadata before forwarding or
@@ -41,20 +50,11 @@ public import Logging
 /// A sensitive entry is replaced with the string `"<redacted>"`. Its attributes are dropped along with its
 /// value, so a redacted entry cannot be re-classified or recovered downstream.
 public struct RedactionLogHandler<Underlying: LogHandler>: LogHandler {
-    /// Whether the wrapper redacts sensitive metadata or forwards events unchanged.
-    public enum Mode: Sendable {
-        /// Replace every metadata value not tagged ``Sensitivity/public`` with the redaction marker.
-        case redacting
-
-        /// Forward every event unchanged.
-        case passthrough
-    }
-
     /// The fixed string written in place of a redacted metadata value.
     public static var redactionMarker: Logger.MetadataValue { "<redacted>" }
 
     /// Redaction mode.
-    public let mode: Mode
+    public let mode: RedactionMode
 
     /// Wrapped `LogHandler`.
     private var underlying: Underlying
@@ -86,12 +86,13 @@ public struct RedactionLogHandler<Underlying: LogHandler>: LogHandler {
     /// Creates a redaction wrapper around another handler that you provide.
     ///
     /// - Parameters:
-    ///   - mode: ``Mode/redacting`` or ``Mode/passthrough``. Fixed for the lifetime of the wrapper.
+    ///   - mode: ``RedactionMode/redacting`` or ``RedactionMode/passthrough``. Fixed for the lifetime of the
+    ///     wrapper.
     ///   - underlying: The handler that receives events after redaction.
     ///   - metadataProvider: An optional metadata provider. Its output merges into every event before
     ///     redaction.
     public init(
-        mode: Mode,
+        mode: RedactionMode,
         wrapping underlying: Underlying,
         metadataProvider: Logger.MetadataProvider? = nil
     ) {
