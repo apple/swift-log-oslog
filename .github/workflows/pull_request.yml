@@ -47,6 +47,7 @@ jobs:
       runner_pool: general
       build_scheme: swift-log-oslog
       swift_test_enabled: true
+      swift_6_1_enabled: false
       swift_6_2_enabled: true
       swift_6_3_enabled: true
       macos_xcode_test_enabled: false

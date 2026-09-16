@@ -42,6 +42,7 @@ jobs:
     with:
       runner_pool: nightly
       build_scheme: swift-log-oslog
+      swift_6_1_enabled: false
       swift_6_2_enabled: true
       swift_6_3_enabled: true
       macos_xcode_test_enabled: false
