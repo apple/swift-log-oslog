@@ -1,13 +1,14 @@
 # Testing redaction
 
-Verify a single metadata value, not just that ``RedactionLogHandler`` is on.
+Verify both that ``RedactionLogHandler`` is on and the metadata value.
 
 ## Overview
 
-`Sensitivity` is tagged per value at the call site. Checking only that redaction is on will not catch a field
-that misses a `sensitivity:` tag, or carries the wrong one. Checking only that a value carries the `.sensitive`
-attribute is not enough either. Most handlers ignore attributes and log the value anyway. Assert on both
-together, through the real handler chain. Run the log. Then check the sink for `<redacted>`.
+`Sensitivity` is applied for each value at the call site.
+Only checking that a redaction handler is enabled will not catch a field that misses a `sensitivity:` tag, or carries the wrong one.
+Likewise, only verifying that a value has the `.sensitive` attribute is not enough either.
+To validate that redaction is enabled and happening properly, assert both together.
+Using the real handler chain, run the log and check the sink for `<redacted>`.
 
 > Note: This checks that a component's values redact correctly. It does not prove the app installs a
 > sensitivity-aware handler in the first place, such as ``RedactionLogHandler`` or one of your own. Test that

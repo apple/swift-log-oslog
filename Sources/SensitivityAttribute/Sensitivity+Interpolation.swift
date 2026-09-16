@@ -15,7 +15,7 @@
 public import Logging
 
 extension Logger.MetadataValue.StringInterpolation {
-    /// Interpolates a value and tags it with a ``Sensitivity`` classification.
+    /// Interpolates a value and tags it with a sensitivity classification.
     ///
     /// Use this to attach a ``Sensitivity`` to one interpolation segment, without writing out the attributes
     /// closure:
@@ -29,7 +29,7 @@ extension Logger.MetadataValue.StringInterpolation {
     ///
     /// This appends the value's `description` to the interpolated string. It sets the segment's attributes so
     /// `value.attributes[Sensitivity.self]` returns `sensitivity`. If more than one segment sets a
-    /// `Sensitivity`, the last one wins. This matches `Logger.MetadataValueAttributes` merge behavior.
+    /// `Sensitivity`, the last one wins, which matches the merge behavior of `Logger.MetadataValueAttributes`.
     ///
     /// - Parameters:
     ///   - value: The value to interpolate. Its `description` is appended to the result.

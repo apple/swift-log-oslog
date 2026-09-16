@@ -6,7 +6,7 @@ A [`swift-log`](https://github.com/apple/swift-log) backend implementation for D
 
 ### `SensitivityAttribute`
 
-- `Sensitivity` — a two-case attribute (`.sensitive`, `.public`) conforming to
+- `Sensitivity` — a two-case attribute (`.sensitive`, `.public`) that conforms to
   `Logger.MetadataValueAttributes.Attribute`.
 - `RedactionLogHandler` — a `LogHandler` wrapper with two modes (`.redacting` / `.passthrough`). In `.redacting`,
   entries not tagged `.public` are rewritten to `"<redacted>"` before forwarding; in `.passthrough`, every event passes

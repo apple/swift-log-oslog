@@ -14,14 +14,15 @@
 
 public import Logging
 
-/// A log handler that wraps another handler. It either redacts sensitive metadata before forwarding, or
-/// forwards every event unchanged.
+/// A log handler that wraps another to provide redaction.
 ///
-/// ``Mode`` sets the wrapper's behavior at construction:
+/// The handler is controlled by it's ``Mode`` which either redacts sensitive metadata before forwarding or
+/// forwards events unchanged.
+/// You set the `Mode` of the handler when you construct it:
 ///
 /// - ``Mode/redacting``: rewrites every metadata entry not tagged ``Sensitivity/public`` to the redaction
-///   marker (`"<redacted>"`) before it reaches the wrapped `Underlying` handler. Untagged entries count as
-///   sensitive. Redacting by default.
+///   marker (`"<redacted>"`) before forwarding the values to the wrapped `Underlying` handler. 
+///   Untagged entries count as treated as sensitive, which redacts them by default.
 /// - ``Mode/passthrough``: forwards every event transparently.
 ///
 /// ```swift
@@ -31,8 +32,9 @@ public import Logging
 ///
 /// ## Log level
 ///
-/// `logLevel` forwards directly to `underlying.logLevel`. Reading it reads `underlying`'s current level.
-/// Setting it sets `underlying`'s level too. The two never drift apart.
+/// `logLevel` forwards to `underlying.logLevel`.
+/// Reading it reads the underlying handler's current level, and 
+/// setting it sets underlying handler's level so the two never drift apart.
 ///
 /// ## Redaction marker
 ///
@@ -81,7 +83,7 @@ public struct RedactionLogHandler<Underlying: LogHandler>: LogHandler {
 
     public var metadataProvider: Logger.MetadataProvider?
 
-    /// Creates a redaction wrapper around `underlying`.
+    /// Creates a redaction wrapper around another handler that you provide.
     ///
     /// - Parameters:
     ///   - mode: ``Mode/redacting`` or ``Mode/passthrough``. Fixed for the lifetime of the wrapper.

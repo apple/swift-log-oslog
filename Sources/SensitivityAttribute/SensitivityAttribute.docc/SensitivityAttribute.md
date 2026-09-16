@@ -4,11 +4,11 @@ Classify metadata values by sensitivity, so a handler can decide what to forward
 
 ## Overview
 
-- ``Sensitivity`` is a two-case attribute that conforms to `Logger.MetadataValueAttributes.Attribute`. Attach
-  it with string interpolation (`"\(value, sensitivity: .public)"`) or the `.attributed` factory.
-- ``RedactionLogHandler`` wraps another `LogHandler`. In ``RedactionLogHandler/Mode/redacting``, it rewrites
-  every metadata entry not tagged ``Sensitivity/public`` to `"<redacted>"` before it reaches the wrapped
-  handler. In ``RedactionLogHandler/Mode/passthrough``, it forwards every event unchanged.
+- ``Sensitivity`` is an attribute with two cases, `.public` and `.sensitive`, that conforms to `Logger.MetadataValueAttributes.Attribute`. 
+Apply it within string interpolation (`"\(value, sensitivity: .public)"`) or the `.attributed` factory.
+- ``RedactionLogHandler`` wraps another `LogHandler` to apply the redaction strategy you choose with `mode`.
+  With the mode ``RedactionLogHandler/Mode/redacting``, it rewrites every metadata entry not tagged ``Sensitivity/public`` to `"<redacted>"` before it reaches the wrapped handler.
+  When you use the mode ``RedactionLogHandler/Mode/passthrough``, it forwards every event unchanged.
 
 ## Usage
 
