@@ -29,8 +29,8 @@ public import Logging
 /// A handler must opt in to act on the classification. 
 /// For example, ``RedactionLogHandler`` provides a handler that redacts values based on this attribute.
 ///
-/// `Sensitivity` is a non-frozen enum. Future versions of this package may add cases. Add a `default:` or
-/// `@unknown default:` branch to every switch over `Sensitivity`:
+/// `Sensitivity` is a non-frozen enum. Future versions of this package may add cases. The compiler requires a
+/// `default:` or `@unknown default:` branch in every switch over `Sensitivity`:
 ///
 /// ```swift
 /// switch sensitivity {
@@ -45,6 +45,7 @@ public import Logging
 /// If you need more classification dimensions, define your own `Logger.MetadataValueAttributes.Attribute` type.
 /// `MetadataValueAttributes` stores an attribute as its `Int64` raw value, so 
 /// an open-for-extension `Sensitivity` would let two cases collide on the raw value.
+@nonexhaustive
 public enum Sensitivity: Int64, Sendable, Logger.MetadataValueAttributes.Attribute {
     /// The value holds sensitive data. Do not send it to a handler that excludes sensitive data.
     case sensitive = 1
