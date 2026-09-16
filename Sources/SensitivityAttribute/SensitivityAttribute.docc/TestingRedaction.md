@@ -1,6 +1,6 @@
 # Testing redaction
 
-Verify both that ``RedactionLogHandler`` is on and the metadata value.
+Verify both that a sensitivity-aware handler is in use and the metadata values have correct sensitivity attributes.
 
 ## Overview
 
@@ -15,7 +15,8 @@ Using the real handler chain, run the log and check the sink for `<redacted>`.
 > separately, as part of your app's own configuration tests.
 
 Code that logs either takes a `Logger` parameter or reads `Logger.current`. Test both the same way. Wrap a sink
-in ``RedactionLogHandler``, run the log, and check the sink for `<redacted>`.
+in a sensitivity-aware handler, run the log, and check the sink for `<redacted>`. The example below uses
+``RedactionLogHandler``; the same approach works with a handler you write yourself.
 
 ```swift
 import InMemoryLogging
