@@ -26,7 +26,7 @@ public import Logging
 /// ```
 ///
 /// Sensitivity is a classification for values and doesn't enforce anything on its own.
-/// A handler must opt in to act on the classification. 
+/// A handler must opt in to act on the classification.
 /// For example, ``RedactionLogHandler`` provides a handler that redacts values based on this attribute.
 ///
 /// `Sensitivity` is a non-frozen enum. Future versions of this package may add cases. The compiler requires a
@@ -41,9 +41,9 @@ public import Logging
 /// }
 /// ```
 ///
-/// Don't extend `Sensitivity`. 
+/// Don't extend `Sensitivity`.
 /// If you need more classification dimensions, define your own `Logger.MetadataValueAttributes.Attribute` type.
-/// `MetadataValueAttributes` stores an attribute as its `Int64` raw value, so 
+/// `MetadataValueAttributes` stores an attribute as its `Int64` raw value, so
 /// an open-for-extension `Sensitivity` would let two cases collide on the raw value.
 @nonexhaustive
 public enum Sensitivity: Int64, Sendable, Logger.MetadataValueAttributes.Attribute {

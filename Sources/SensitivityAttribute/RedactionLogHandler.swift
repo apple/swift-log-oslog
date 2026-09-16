@@ -28,14 +28,14 @@ public enum RedactionMode: Sendable {
 
 /// A log handler that wraps another to provide redaction.
 ///
-/// The handler is controlled by it's ``Mode`` which either redacts sensitive metadata before forwarding or
+/// The handler is controlled by it's ``RedactionMode`` which either redacts sensitive metadata before forwarding or
 /// forwards events unchanged.
-/// You set the `Mode` of the handler when you construct it:
+/// You set the `RedactionMode` of the handler when you construct it:
 ///
-/// - ``Mode/redacting``: rewrites every metadata entry not tagged ``Sensitivity/public`` to the redaction
-///   marker (`"<redacted>"`) before forwarding the values to the wrapped `Underlying` handler. 
+/// - ``RedactionMode/redacting``: rewrites every metadata entry not tagged ``Sensitivity/public`` to the redaction
+///   marker (`"<redacted>"`) before forwarding the values to the wrapped `Underlying` handler.
 ///   Untagged entries count as treated as sensitive, which redacts them by default.
-/// - ``Mode/passthrough``: forwards every event transparently.
+/// - ``RedactionMode/passthrough``: forwards every event transparently.
 ///
 /// ```swift
 /// let console = StreamLogHandler.standardOutput(label: "console")
@@ -45,7 +45,7 @@ public enum RedactionMode: Sendable {
 /// ## Log level
 ///
 /// `logLevel` forwards to `underlying.logLevel`.
-/// Reading it reads the underlying handler's current level, and 
+/// Reading it reads the underlying handler's current level, and
 /// setting it sets underlying handler's level so the two never drift apart.
 ///
 /// ## Redaction marker
