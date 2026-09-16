@@ -15,7 +15,7 @@
 public import Logging
 
 /// The fixed string written in place of a redacted metadata value.
-private let redactionMarker: Logger.MetadataValue = "<redacted>"
+private var redactionMarker: Logger.MetadataValue { "<redacted>" }
 
 /// Whether a ``RedactionLogHandler`` redacts sensitive metadata or forwards events unchanged.
 public enum RedactionMode: Sendable {
