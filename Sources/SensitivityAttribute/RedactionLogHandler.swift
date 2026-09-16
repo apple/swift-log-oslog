@@ -14,6 +14,9 @@
 
 public import Logging
 
+/// The fixed string written in place of a redacted metadata value.
+private let redactionMarker: Logger.MetadataValue = "<redacted>"
+
 /// Whether a ``RedactionLogHandler`` redacts sensitive metadata or forwards events unchanged.
 public enum RedactionMode: Sendable {
     /// Replace every metadata value not tagged ``Sensitivity/public`` with the redaction marker.
@@ -50,9 +53,6 @@ public enum RedactionMode: Sendable {
 /// A sensitive entry is replaced with the string `"<redacted>"`. Its attributes are dropped along with its
 /// value, so a redacted entry cannot be re-classified or recovered downstream.
 public struct RedactionLogHandler<Underlying: LogHandler>: LogHandler {
-    /// The fixed string written in place of a redacted metadata value.
-    public static var redactionMarker: Logger.MetadataValue { "<redacted>" }
-
     /// Redaction mode.
     public let mode: RedactionMode
 
@@ -167,9 +167,9 @@ public struct RedactionLogHandler<Underlying: LogHandler>: LogHandler {
         return emission.isEmpty ? nil : emission
     }
 
-    /// Replaces every entry not tagged ``Sensitivity/public`` with ``redactionMarker``. An untagged entry
+    /// Replaces every entry not tagged ``Sensitivity/public`` with the redaction marker. An untagged entry
     /// counts as sensitive.
     private static func redactedValues(_ metadata: Logger.Metadata) -> Logger.Metadata {
-        metadata.mapValues { $0.attributes[Sensitivity.self] == .public ? $0 : Self.redactionMarker }
+        metadata.mapValues { $0.attributes[Sensitivity.self] == .public ? $0 : redactionMarker }
     }
 }
