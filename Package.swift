@@ -1,22 +1,29 @@
-// swift-tools-version: 6.1
+// swift-tools-version: 6.2
 
 import PackageDescription
 
 let package = Package(
     name: "swift-log-oslog",
     products: [
-        .library(
-            name: "swift_log_oslog",
-            targets: ["swift_log_oslog"]
-        )
+        .library(name: "SensitivityAttribute", targets: ["SensitivityAttribute"])
+    ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.6.0")
     ],
     targets: [
         .target(
-            name: "swift_log_oslog",
+            name: "SensitivityAttribute",
+            dependencies: [
+                .product(name: "Logging", package: "swift-log")
+            ],
+            exclude: ["SensitivityAttribute.docc"]
         ),
         .testTarget(
-            name: "swift_log_oslogTests",
-            dependencies: ["swift_log_oslog"],
+            name: "SensitivityAttributeTests",
+            dependencies: [
+                "SensitivityAttribute",
+                .product(name: "InMemoryLogging", package: "swift-log"),
+            ],
         ),
     ]
 )
