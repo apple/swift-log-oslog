@@ -17,17 +17,9 @@ public import Logging
 import SensitivityAttribute
 import os
 
-/// A redaction-aware log handler that uses the Darwin unified logging system (`os.Logger`).
+/// A log handler that uses the Darwin unified logging system (`os.Logger`) and its native privacy support.
 ///
-/// This handler uses OSLog's native privacy support. It redacts a metadata value unless the value is tagged
-/// ``Sensitivity/public``. Anything not proven safe stays out of collected logs.
-///
-/// ## Features
-///
-/// - Native privacy support: uses OSLog's `privacy: .private` and `privacy: .public` annotations.
-/// - System integration: logs appear in Console.app and with the `log` command.
-/// - Performance: zero cost when logging is disabled at the system level.
-/// - Subsystem organization: groups logs by subsystem and category for filtering.
+/// Marks a metadata value private unless it's tagged ``Sensitivity/public``.
 ///
 /// ## Usage
 ///
@@ -44,41 +36,31 @@ import os
 ///
 /// ## Redaction behavior
 ///
-/// Redaction denies by default, matching `RedactionLogHandler`:
-///
-/// - ``Sensitivity/public`` metadata maps to OSLog `privacy: .public`. It stays visible.
-/// - Everything else maps to OSLog `privacy: .private`, shown as `<private>` in collected logs. This
-///   includes ``Sensitivity/sensitive``, untagged values, and any future `Sensitivity` case.
-///
-/// The log message itself is emitted as `privacy: .public`. OSLog redacts a dynamic string by default, which
-/// would render every message as `<private>`. The message is a developer-authored line, so this handler
-/// treats it like every other swift-log handler does. Keep sensitive data in metadata tagged
-/// ``Sensitivity/sensitive``, not in the message.
+/// - ``Sensitivity/public`` maps to OSLog `privacy: .public` and stays visible.
+/// - Everything else maps to `privacy: .private` and shows as `<private>`. This includes
+///   ``Sensitivity/sensitive``, untagged values, and future `Sensitivity` cases.
+/// - The message itself is always `privacy: .public`. OSLog would otherwise redact every dynamic message.
+///   Keep sensitive data in metadata, not the message.
 @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
 public struct OSLogHandler: LogHandler {
     @usableFromInline
     internal var osLogger: os.Logger
 
-    /// A parallel `OSLog` handle. Used only to query the unified logging system's current per-type enablement
-    /// with `isEnabled(type:)` when deriving ``logLevel``. `os.Logger` does not expose enablement, so this
-    /// handler keeps both. Both refer to the same subsystem and category.
+    /// A parallel `OSLog` handle, used only to query enablement for ``logLevel``. `os.Logger` itself cannot
+    /// report which levels the system has enabled.
     internal let osLog: OSLog
 
-    /// The base (logger) metadata, kept pre-split by ``Sensitivity``, so it never needs re-partitioning per
-    /// log. ``Sensitivity/public`` entries live here. Everything else lives in ``privateBaseMetadata``. The
-    /// two halves have disjoint keys.
+    /// Base metadata, split by ``Sensitivity`` ahead of time. This avoids repartitioning on every log.
+    /// ``Sensitivity/public`` entries are stored in ``publicBaseMetadata``. Everything else is in
+    /// ``privateBaseMetadata``.
     @usableFromInline package var publicBaseMetadata: Logging.Logger.Metadata = [:]
     @usableFromInline package var privateBaseMetadata: Logging.Logger.Metadata = [:]
 
-    /// Cached `key=value` flattenings of the two base halves. These recompute only when the base metadata
-    /// changes. A log with no emission-time metadata reuses them directly. A log with emission-time metadata
-    /// partitions only that metadata and appends it. The base string is never re-flattened on the hot path.
+    /// Caches a `key=value` flattening of each base half. Recomputes only when the base metadata changes.
     @usableFromInline package var publicBaseString: String = ""
     @usableFromInline package var privateBaseString: String = ""
 
-    /// The base metadata as a single dictionary. It is stored split by sensitivity (see ``publicBaseMetadata``).
-    /// This getter reunites the two halves, since their keys are disjoint. The setter re-splits and
-    /// re-flattens them.
+    /// Base metadata as one dictionary. Reunites the two halves. The setter re-splits and re-flattens them.
     public var metadata: Logging.Logger.Metadata {
         get {
             if self.privateBaseMetadata.isEmpty { return self.publicBaseMetadata }
@@ -102,22 +84,17 @@ public struct OSLogHandler: LogHandler {
 
     public var metadataProvider: Logging.Logger.MetadataProvider?
 
-    /// An explicit log-level override. When `nil` (the default), ``logLevel`` is derived from the
-    /// system's current enablement.
+    /// Explicit log-level override. `nil` means derive the level from the system's per-type enablement. See
+    /// ``systemLogLevel(_:)``.
     internal var explicitLogLevel: Logging.Logger.Level?
 
     /// The effective log level.
     ///
-    /// With no explicit override, this reflects the unified logging system's current enablement for this
-    /// subsystem and category. swift-log compares it against each message's level before it builds the
-    /// message. A level the system has disabled drops by a cheap comparison, instead of building and
-    /// forwarding a log line the system would discard anyway. This is the difference between a full ~250 ns
-    /// log call and a ~5 ns gate on the hot path.
-    ///
-    /// Assigning a value installs an explicit override that wins over system enablement. This preserves the
-    /// value-semantics behavior a `LogHandler` must have. Unified logging enablement is a system-wide
-    /// setting, so the derived (non-overridden) value can legitimately differ across processes and change at
-    /// runtime. The `LogHandler` contract permits such global overrides.
+    /// With no override, this derives from the system's current per-type enablement. See
+    /// ``systemLogLevel(_:)``. A disabled level drops via a cheap comparison instead of building the log
+    /// line. Assigning a value installs an explicit override that wins from then on. This preserves
+    /// `LogHandler`'s value-semantics contract. System enablement is process-wide, so the derived value can
+    /// legitimately differ across processes and change at runtime.
     public var logLevel: Logging.Logger.Level {
         get { self.explicitLogLevel ?? Self.systemLogLevel(self.osLog) }
         set { self.explicitLogLevel = newValue }
@@ -126,10 +103,8 @@ public struct OSLogHandler: LogHandler {
     /// Creates an OSLog handler with the specified subsystem and category.
     ///
     /// - Parameters:
-    ///   - subsystem: The identifier for the subsystem emitting the logs, typically a reverse-DNS string
-    ///     such as `"com.example.myapp"`.
-    ///   - category: The category to group these logs under, for filtering in Console.app or with the `log`
-    ///     command.
+    ///   - subsystem: Reverse-DNS identifier for the subsystem, e.g. `"com.example.myapp"`.
+    ///   - category: Category for filtering in Console.app or with `log`.
     public init(subsystem: String, category: String) {
         self.osLogger = os.Logger(subsystem: subsystem, category: category)
         self.osLog = OSLog(subsystem: subsystem, category: category)
@@ -137,10 +112,10 @@ public struct OSLogHandler: LogHandler {
 
     /// Creates an OSLog handler from a swift-log label.
     ///
-    /// The `label` is used as the `os.Logger` subsystem with a `"default"` category, so the handler can be used
-    /// directly as a `LoggingSystem.bootstrap` factory. Use ``init(subsystem:category:)`` for finer control.
+    /// Uses `label` as the subsystem and `"default"` as the category. Use ``init(subsystem:category:)`` for
+    /// finer control.
     ///
-    /// - Parameter label: The swift-log label, used as the `os.Logger` subsystem.
+    /// - Parameter label: Becomes the `os.Logger` subsystem.
     public init(label: String) {
         self.init(subsystem: label, category: "default")
     }
@@ -153,21 +128,21 @@ public struct OSLogHandler: LogHandler {
         let privateString: String
         if let emission = self.emissionTimeMetadata(for: event) {
             if self.emissionOverlapsBase(emission) {
-                // Rare: an emission-time key also names a base entry. Merge so emission-time wins (base
-                // loses to emission), then partition the whole. This keeps override precedence correct.
+                // Rare: emission-time key collides with a base key. Merge the two, where emission-time
+                // metadata wins on conflicts, then partition the result.
                 var merged = self.publicBaseMetadata
                 merged.merge(self.privateBaseMetadata) { keep, _ in keep }
                 merged.merge(emission) { _, emitted in emitted }
                 (publicString, privateString) = Self.partition(merged)
             } else {
-                // Common: keys are disjoint. Partition only the small emission-time metadata and append it
-                // to the cached base partition. The base string is never re-flattened.
+                // Common: no collision. Partition just the emission-time metadata and append to the cached
+                // base.
                 let (emittedPublic, emittedPrivate) = Self.partition(emission)
                 publicString = Self.appending(emittedPublic, to: self.publicBaseString)
                 privateString = Self.appending(emittedPrivate, to: self.privateBaseString)
             }
         } else {
-            // No emission-time metadata: the base partition, already cached, is the whole output.
+            // No emission-time metadata: use the cached base partition directly.
             (publicString, privateString) = (self.publicBaseString, self.privateBaseString)
         }
 
@@ -211,9 +186,9 @@ public struct OSLogHandler: LogHandler {
 
     // MARK: - Pure helpers (package access for testing)
 
-    /// The emission-time metadata: the metadata provider's output merged with the event's own metadata (the
-    /// event wins on conflicts), plus injected error fields. This is the metadata supplied at the log call,
-    /// separate from the base metadata configured on the handler. Returns `nil` when there is none.
+    /// Emission-time metadata for one log call. It merges the metadata provider's output with the event's
+    /// own metadata, where the event wins on conflicts, plus injected error fields. Returns `nil` when
+    /// empty. Excludes base metadata.
     @usableFromInline
     package func emissionTimeMetadata(for event: LogEvent) -> Logging.Logger.Metadata? {
         var metadata = Logging.Logger.Metadata()
@@ -238,9 +213,8 @@ public struct OSLogHandler: LogHandler {
         return metadata.isEmpty ? nil : metadata
     }
 
-    /// Whether any emission-time key also names a base entry. This is the one case where appending would
-    /// duplicate a key, so the caller falls back to a full merge (base loses to emission) instead of
-    /// appending.
+    /// Whether an emission-time key also names a base entry. Appending would duplicate that key in this
+    /// case.
     @usableFromInline
     package func emissionOverlapsBase(_ emission: Logging.Logger.Metadata) -> Bool {
         for key in emission.keys where self.publicBaseMetadata[key] != nil || self.privateBaseMetadata[key] != nil {
@@ -249,8 +223,7 @@ public struct OSLogHandler: LogHandler {
         return false
     }
 
-    /// Flattens metadata into a sorted `key=value` string. Does not split by sensitivity. Used for an
-    /// already-split base half, whose entries are all on the same side.
+    /// Flattens already-split metadata into a sorted `key=value` string.
     package static func flatten(_ metadata: Logging.Logger.Metadata) -> String {
         var result = ""
         result.reserveCapacity(metadata.keys.reduce(0) { $0 + $1.utf8.count + 2 } + metadata.count)
@@ -263,7 +236,7 @@ public struct OSLogHandler: LogHandler {
         return result
     }
 
-    /// Appends `field` to `base` separated by a space, avoiding a copy when either side is empty.
+    /// Appends `field` to `base`, separated by a space. Skips the copy when either side is empty.
     @usableFromInline
     package static func appending(_ field: String, to base: String) -> String {
         if field.isEmpty { return base }
@@ -271,12 +244,8 @@ public struct OSLogHandler: LogHandler {
         return base + " " + field
     }
 
-    /// Splits metadata into a public and a private `key=value` string in one sorted pass.
-    ///
-    /// Denies by default: only a value explicitly tagged ``Sensitivity/public`` goes to the public string.
-    /// Everything else goes to the private string. Entries sort by key for deterministic output. The two
-    /// strings build directly, so this skips the intermediate arrays and per-entry interpolation a
-    /// multi-pass filter would need.
+    /// Splits metadata into sorted public/private `key=value` strings in one pass. Denies by default: only
+    /// ``Sensitivity/public`` goes to the public string.
     @usableFromInline
     package static func partition(
         _ metadata: Logging.Logger.Metadata
@@ -300,12 +269,8 @@ public struct OSLogHandler: LogHandler {
         return (publicString, privateString)
     }
 
-    /// Maps a swift-log level to the closest `OSLogType`.
-    ///
-    /// OSLog has five levels for swift-log's seven, so two pairs collapse: `trace` and `debug` both map to
-    /// `.debug`, and `notice` and `warning` both map to `.default`. `.error` is reserved for swift-log
-    /// `.error`, so Console's error filter stays meaningful. `.default` still persists to disk, so a warning
-    /// is not lost.
+    /// Maps a swift-log level to the closest `OSLogType`. OSLog has five levels for swift-log's seven:
+    /// `trace`/`debug` collapse to `.debug`, `notice`/`warning` collapse to `.default`.
     @usableFromInline
     package static func osLogType(for level: Logging.Logger.Level) -> OSLogType {
         switch level {
@@ -317,12 +282,8 @@ public struct OSLogHandler: LogHandler {
         }
     }
 
-    /// Derives a swift-log threshold from the unified logging system's current per-type enablement.
-    ///
-    /// Enablement is monotonic in practice. Enabling `.debug` implies `.info`, and so on. So a single
-    /// threshold faithfully approximates it. This probes from most to least verbose, so the common case
-    /// (fine-grained levels disabled) short-circuits after one or two checks. The `isEnabled` guard in
-    /// ``log(event:)`` still catches any non-monotonic gap per call.
+    /// Derives a swift-log threshold from the system's per-type enablement. Assumes enablement is monotonic
+    /// (`.debug` implies `.info`, etc.) and probes from most to least verbose.
     package static func systemLogLevel(_ osLog: OSLog) -> Logging.Logger.Level {
         if osLog.isEnabled(type: .debug) { return .trace }
         if osLog.isEnabled(type: .info) { return .info }
