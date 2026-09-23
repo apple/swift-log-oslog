@@ -45,7 +45,7 @@ jobs:
     uses: apple/swift-nio/.github/workflows/macos_tests.yml@main
     with:
       runner_pool: general
-      build_scheme: swift-log-oslog
+      build_scheme: swift-log-oslog-Package
       swift_test_enabled: true
       swift_6_1_enabled: false
       swift_6_2_enabled: true
