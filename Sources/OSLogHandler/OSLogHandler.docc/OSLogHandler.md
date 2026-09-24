@@ -55,4 +55,3 @@ message.
 ### Creating a handler
 
 - ``OSLogHandler/init(subsystem:category:)``
-- ``OSLogHandler/init(label:)``

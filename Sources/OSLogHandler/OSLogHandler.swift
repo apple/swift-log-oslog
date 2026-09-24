@@ -112,16 +112,6 @@ public struct OSLogHandler: LogHandler {
         self.osLog = OSLog(subsystem: subsystem, category: category)
     }
 
-    /// Creates an OSLog handler from a swift-log label.
-    ///
-    /// Uses `label` as the subsystem and `"default"` as the category. Use ``init(subsystem:category:)`` for
-    /// finer control.
-    ///
-    /// - Parameter label: Becomes the `os.Logger` subsystem.
-    public init(label: String) {
-        self.init(subsystem: label, category: "default")
-    }
-
     @inlinable
     public func log(event: LogEvent) {
         let level = Self.osLogType(for: event.level)
