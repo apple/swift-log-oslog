@@ -19,16 +19,14 @@ import SensitivityAttribute
 import Testing
 import os
 
-// Swift Testing's `@Test` macro cannot be applied to `@available`-annotated functions, so the suite is left
-// unannotated and each test guards `os.Logger` availability at runtime instead.
 @Suite
 struct OSLogHandlerTests {
 
     // MARK: - Level mapping
 
     @Test
+    @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
     func mapsEverySwiftLogLevelToAnOSLogType() {
-        guard #available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) else { return }
         #expect(OSLogHandler.osLogType(for: .trace) == .debug)
         #expect(OSLogHandler.osLogType(for: .debug) == .debug)
         #expect(OSLogHandler.osLogType(for: .info) == .info)
@@ -41,8 +39,8 @@ struct OSLogHandlerTests {
     // MARK: - Partition (deny-by-default)
 
     @Test
+    @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
     func partitionKeepsOnlyExplicitlyPublicValuesPublic() {
-        guard #available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) else { return }
         let (publicString, privateString) = OSLogHandler.partition([
             "method": .attributed("GET", attributes: [Sensitivity.public]),
             "user_id": .attributed("u-123", attributes: [Sensitivity.sensitive]),
@@ -55,8 +53,8 @@ struct OSLogHandlerTests {
     }
 
     @Test
+    @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
     func partitionSortsEachSideByKey() {
-        guard #available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) else { return }
         let (publicString, privateString) = OSLogHandler.partition([
             "b": .attributed("2", attributes: [Sensitivity.public]),
             "a": .attributed("1", attributes: [Sensitivity.public]),
@@ -69,8 +67,8 @@ struct OSLogHandlerTests {
     }
 
     @Test
+    @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
     func partitionRoutesAllToPrivateWhenNothingIsPublic() {
-        guard #available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) else { return }
         let (publicString, privateString) = OSLogHandler.partition([
             "a": "1",
             "b": .attributed("2", attributes: [Sensitivity.sensitive]),
@@ -83,8 +81,8 @@ struct OSLogHandlerTests {
     // MARK: - Metadata merging
 
     @Test
+    @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
     func emissionTimeMetadataAppliesProviderThenEventPrecedence() throws {
-        guard #available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) else { return }
         var handler = OSLogHandler(subsystem: "test", category: "merge")
         handler.metadata = ["a": "base_a"]  // base is kept separate from the emission-time metadata
         handler.metadataProvider = Logger.MetadataProvider {
@@ -110,8 +108,8 @@ struct OSLogHandlerTests {
     }
 
     @Test
+    @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
     func emissionTimeMetadataForwardsEventMetadata() throws {
-        guard #available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) else { return }
         let handler = OSLogHandler(subsystem: "test", category: "fast")  // no base, no provider
 
         let event = LogEvent(
@@ -130,8 +128,8 @@ struct OSLogHandlerTests {
     }
 
     @Test
+    @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
     func emissionTimeMetadataReturnsNilWhenEmpty() {
-        guard #available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) else { return }
         let handler = OSLogHandler(subsystem: "test", category: "empty")
 
         let event = LogEvent(
@@ -149,8 +147,8 @@ struct OSLogHandlerTests {
     }
 
     @Test
+    @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
     func emissionTimeMetadataInjectsErrorFieldsThatStayPrivate() throws {
-        guard #available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) else { return }
         struct SampleError: Error {}
         let handler = OSLogHandler(subsystem: "test", category: "error")
 
@@ -175,8 +173,8 @@ struct OSLogHandlerTests {
     }
 
     @Test
+    @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
     func emissionTimeMetadataDoesNotOverrideExplicitEventErrorFields() throws {
-        guard #available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) else { return }
         struct SampleError: Error {}
         let handler = OSLogHandler(subsystem: "test", category: "error-override")
 
@@ -197,8 +195,8 @@ struct OSLogHandlerTests {
     }
 
     @Test
+    @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
     func emissionOverlapsBaseDetectsSharedKeys() {
-        guard #available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) else { return }
         var handler = OSLogHandler(subsystem: "test", category: "overlap")
         handler.metadata = [
             "a": "base_a",  // private side
@@ -214,8 +212,8 @@ struct OSLogHandlerTests {
     // MARK: - Base metadata: split by sensitivity, cached, reconstructed
 
     @Test
+    @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
     func baseMetadataSplitsBySensitivityAndReconstructs() {
-        guard #available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) else { return }
         var handler = OSLogHandler(subsystem: "test", category: "base")
 
         // A fresh handler has empty halves and empty cached strings.
@@ -257,8 +255,8 @@ struct OSLogHandlerTests {
     // MARK: - Value semantics (LogHandler requirement)
 
     @Test
+    @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
     func logLevelAndMetadataBehaveAsValues() {
-        guard #available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) else { return }
         var handler1 = OSLogHandler(subsystem: "test", category: "value")
         handler1.logLevel = .debug
         handler1[metadataKey: "only-on"] = "first"
@@ -274,8 +272,8 @@ struct OSLogHandlerTests {
     }
 
     @Test
+    @available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *)
     func explicitLogLevelOverridesSystemEnablement() {
-        guard #available(macOS 11.0, iOS 14.0, tvOS 14.0, watchOS 7.0, *) else { return }
         // With no override, the level is derived from the system's current enablement (environment
         // dependent, so not asserted here). An explicit assignment must take precedence regardless.
         var handler = OSLogHandler(subsystem: "test", category: "override")
