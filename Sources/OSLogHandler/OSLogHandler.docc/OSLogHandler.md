@@ -43,11 +43,10 @@ Login successful action=password user.id=12345
 - Everything else, including `.sensitive`, untagged values, and future cases: redacted as `<private>`.
 - The message itself is always `privacy: .public`. Keep sensitive data in metadata, not the message.
 
-## Performance
+## Performance tips
 
-Prefer short, constant messages and short metadata values. A runtime-built `String` allocates once it
-exceeds 15 UTF-8 bytes. A literal stays free. A disabled level drops before this handler even builds the
-message.
+- Keep metadata values under 15 UTF-8 bytes to avoid `String` allocations.
+- Construct the metadata dict inline in the log call, so a disabled level skips the construction.
 
 ## Topics
 
