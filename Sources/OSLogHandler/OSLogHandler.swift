@@ -17,9 +17,8 @@ public import Logging
 import SensitivityAttribute
 import os
 
-/// A log handler that uses the Darwin unified logging system (`os.Logger`) and its native privacy support.
-///
-/// Marks a metadata value private unless it's tagged ``Sensitivity/public``.
+/// A sensitivity-aware log handler for the Darwin unified logging system that maps ``Sensitivity`` values
+/// to the OSLog privacy model.
 ///
 /// ## Usage
 ///
@@ -84,7 +83,7 @@ public struct OSLogHandler: LogHandler {
 
     public var metadataProvider: Logging.Logger.MetadataProvider?
 
-    /// Explicit log-level override. 
+    /// Explicit log-level override.
     ///
     /// `nil` means derive the level from the system's per-type enablement. See
     /// ``systemLogLevel(_:)``.

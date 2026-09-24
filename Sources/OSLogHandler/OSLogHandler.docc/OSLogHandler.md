@@ -4,9 +4,8 @@ A sensitivity-aware log handler for the Darwin unified logging system.
 
 ## Overview
 
-The OSLogHandler provides a redacting log handler that logs to the Darwin unified logging system, for example `os.Logger`.
-Redaction denies by default: only metadata tagged `.public` stays visible. Everything else shows as
-`<private>` in collected logs.
+The OSLogHandler is a sensitivity-aware log handler for the Darwin unified logging system that maps
+`Sensitivity` values to the OSLog privacy model.
 
 ## Usage
 
