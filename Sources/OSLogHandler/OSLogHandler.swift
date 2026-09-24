@@ -84,7 +84,9 @@ public struct OSLogHandler: LogHandler {
 
     public var metadataProvider: Logging.Logger.MetadataProvider?
 
-    /// Explicit log-level override. `nil` means derive the level from the system's per-type enablement. See
+    /// Explicit log-level override. 
+    ///
+    /// `nil` means derive the level from the system's per-type enablement. See
     /// ``systemLogLevel(_:)``.
     internal var explicitLogLevel: Logging.Logger.Level?
 
