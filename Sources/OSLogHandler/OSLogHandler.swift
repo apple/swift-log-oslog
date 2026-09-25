@@ -59,7 +59,7 @@ public struct OSLogHandler: LogHandler {
     @usableFromInline package var publicBaseString: String = ""
     @usableFromInline package var privateBaseString: String = ""
 
-    /// Base metadata as one dictionary. 
+    /// Base metadata as one dictionary.
     ///
     /// Reunites the two halves. The setter re-splits and re-flattens them.
     public var metadata: Logging.Logger.Metadata {
@@ -120,8 +120,8 @@ public struct OSLogHandler: LogHandler {
     /// Emits a log event to the Darwin unified logging system.
     ///
     /// This method partitions the event's metadata into public and private based on
-    /// each value's ``Sensitivity``, maps `event.level` to the closest `OSLogType`, 
-    //// and emits a single `os.Logger` call. 
+    /// each value's ``Sensitivity``, maps `event.level` to the closest `OSLogType`,
+    //// and emits a single `os.Logger` call.
     /// The message text itself is always `privacy: .public`.
     @inlinable
     public func log(event: LogEvent) {
