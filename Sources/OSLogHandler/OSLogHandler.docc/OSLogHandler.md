@@ -9,6 +9,8 @@ The OSLogHandler is a sensitivity-aware log handler for the Darwin unified loggi
 
 ## Usage
 
+The following code creates an `OSLogHandler` and presents a simple logging example in order to show different automatic redaction, based on `debug` or `release` builds:
+
 ```swift
 import Logging
 import OSLogHandler
