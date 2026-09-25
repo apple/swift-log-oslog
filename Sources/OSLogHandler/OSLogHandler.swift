@@ -17,7 +17,7 @@ public import Logging
 import SensitivityAttribute
 import os
 
-/// A sensitivity-aware log handler for the Darwin unified logging system that maps ``Sensitivity`` values
+/// A sensitivity-aware log handler for the Darwin unified logging system that maps sensitivity values
 /// to the OSLog privacy model.
 ///
 /// ## Usage
@@ -59,7 +59,9 @@ public struct OSLogHandler: LogHandler {
     @usableFromInline package var publicBaseString: String = ""
     @usableFromInline package var privateBaseString: String = ""
 
-    /// Base metadata as one dictionary. Reunites the two halves. The setter re-splits and re-flattens them.
+    /// Base metadata as one dictionary. 
+    ///
+    /// Reunites the two halves. The setter re-splits and re-flattens them.
     public var metadata: Logging.Logger.Metadata {
         get {
             if self.privateBaseMetadata.isEmpty { return self.publicBaseMetadata }
@@ -81,6 +83,10 @@ public struct OSLogHandler: LogHandler {
         }
     }
 
+    /// Supplies metadata to attach to every log message, resolved fresh at emission time.
+    ///
+    /// The handler merges this provider's output with the event's own metadata.
+    /// The event's metadata wins on key conflicts.
     public var metadataProvider: Logging.Logger.MetadataProvider?
 
     /// Explicit log-level override.
@@ -104,13 +110,19 @@ public struct OSLogHandler: LogHandler {
     /// Creates an OSLog handler with the specified subsystem and category.
     ///
     /// - Parameters:
-    ///   - subsystem: Reverse-DNS identifier for the subsystem, e.g. `"com.example.myapp"`.
+    ///   - subsystem: Reverse-DNS identifier for the subsystem, such as `"com.example.myapp"`.
     ///   - category: Category for filtering in Console.app or with `log`.
     public init(subsystem: String, category: String) {
         self.osLogger = os.Logger(subsystem: subsystem, category: category)
         self.osLog = OSLog(subsystem: subsystem, category: category)
     }
 
+    /// Emits a log event to the Darwin unified logging system.
+    ///
+    /// This method partitions the event's metadata into public and private based on
+    /// each value's ``Sensitivity``, maps `event.level` to the closest `OSLogType`, 
+    //// and emits a single `os.Logger` call. 
+    /// The message text itself is always `privacy: .public`.
     @inlinable
     public func log(event: LogEvent) {
         let level = Self.osLogType(for: event.level)
@@ -158,6 +170,10 @@ public struct OSLogHandler: LogHandler {
         }
     }
 
+    /// Accesses base metadata by key.
+    ///
+    /// A read checks both the public and private partitions. A write puts the new value into a
+    /// partition based on its ``Sensitivity``; setting `nil` removes the key from both partitions.
     public subscript(metadataKey key: String) -> Logging.Logger.Metadata.Value? {
         get { self.publicBaseMetadata[key] ?? self.privateBaseMetadata[key] }
         set {
