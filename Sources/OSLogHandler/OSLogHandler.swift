@@ -121,7 +121,7 @@ public struct OSLogHandler: LogHandler {
     ///
     /// This method partitions the event's metadata into public and private based on
     /// each value's ``Sensitivity``, maps `event.level` to the closest `OSLogType`,
-    //// and emits a single `os.Logger` call.
+    /// and emits a single `os.Logger` call.
     /// The message text itself is always `privacy: .public`.
     @inlinable
     public func log(event: LogEvent) {
