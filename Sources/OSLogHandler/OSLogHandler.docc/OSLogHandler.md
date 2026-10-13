@@ -1,0 +1,57 @@
+# ``OSLogHandler``
+
+A sensitivity-aware log handler for the Darwin unified logging system.
+
+## Overview
+
+The OSLogHandler is a sensitivity-aware log handler for the Darwin unified logging system that maps
+`Sensitivity` values to the OSLog privacy model.
+
+## Usage
+
+The following code creates an `OSLogHandler` and presents a simple logging example in order to show different automatic redaction, based on `debug` or `release` builds:
+
+```swift
+import Logging
+import OSLogHandler
+import SensitivityAttribute
+
+let logger = Logger(label: "auth") { label in
+    OSLogHandler(subsystem: "com.example.myapp", category: label)
+}
+
+let userId = "12345"
+logger.info("Login successful", metadata: [
+    "user.id": "\(userId, sensitivity: .sensitive)",
+    "action": "\("password", sensitivity: .public)",
+])
+```
+
+Production logs (Console.app, non-debug builds):
+
+```txt
+Login successful action=password <private>
+```
+
+Debug builds (Xcode attached, or `log stream --level debug`):
+
+```txt
+Login successful action=password user.id=12345
+```
+
+## Sensitivity behavior
+
+- `.public` metadata: always visible.
+- Everything else, including `.sensitive`, untagged values, and future cases: redacted as `<private>`.
+- The message itself is always `privacy: .public`. Keep sensitive data in metadata, not the message.
+
+## Performance tips
+
+- Keep metadata values under 15 UTF-8 bytes to avoid `String` allocations.
+- Construct the metadata dict inline in the log call, so a disabled level skips the construction.
+
+## Topics
+
+### Creating a handler
+
+- ``OSLogHandler/init(subsystem:category:)``
