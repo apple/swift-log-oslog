@@ -14,9 +14,13 @@
 
 import Benchmark
 
-// `os` (Apple's unified logging) and `Logging` (swift-log) both export a `Logger` type. Importing both in the
-// same file makes `Logger` ambiguous. The pure and bridge benchmarks live in separate files with disjoint
-// imports. This file wires them together.
+// `os` and `Logging` both export a `Logger` type. The pure and bridge benchmarks live in separate files with
+// disjoint imports to avoid the clash.
+
+/// Registers the `os.Logger` and `OSLogHandler` benchmarks.
+///
+/// The benchmarks count the instructions and allocations of this process. They do not count os_log work in
+/// other processes.
 public let benchmarks: @Sendable () -> Void = {
     // Built here, not as a global `let`, because `Benchmark.Configuration` is not Sendable.
     let configuration = Benchmark.Configuration(

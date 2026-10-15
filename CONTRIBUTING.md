@@ -75,12 +75,12 @@ Once an issue is assigned to you, follow these steps:
 
 ## Benchmarks
 
-Benchmarks for `swift-log-oslog` are in a separate Swift Package in the `Benchmarks` subfolder of this repository.
+Benchmarks for `swift-log-oslog` are in two separate Swift packages: `Benchmarks/OSLog` and `Benchmarks/Redaction`.
 They use the [`ordo-one/benchmark`](https://github.com/ordo-one/benchmark) plugin.
 An installation guide can be found in the [Getting Started article](https://swiftpackageindex.com/ordo-one/benchmark/documentation/benchmark/gettingstarted#Installing-Prerequisites-and-Platform-Support) of `package-benchmark`.
-Afterwards you can run the benchmarks from CLI by going to the `Benchmarks` subfolder (e.g. `cd Benchmarks`) and invoking:
+Afterwards you can run the benchmarks from CLI by going to one of the two package folders (for example `cd Benchmarks/OSLog`) and invoking:
 ```
-swift package benchmark
+swift package --disable-sandbox --allow-writing-to-package-directory benchmark
 ```
 
 For more information please refer to `swift package benchmark --help` or the [documentation of `package-benchmark`](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark).

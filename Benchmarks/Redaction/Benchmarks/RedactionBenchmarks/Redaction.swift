@@ -18,8 +18,8 @@ import SensitivityAttribute
 
 // MARK: - Support handlers
 
-/// A terminal handler that consumes the (possibly redacted) metadata through `blackHole`, so the redaction
-/// work on the way in cannot be optimized away.
+/// A terminal handler that passes the event metadata to `blackHole`, so the compiler cannot remove the redaction
+/// work.
 struct SinkLogHandler: LogHandler {
     var logLevel: Logger.Level = .trace
     var metadata: Logger.Metadata = [:]
@@ -35,9 +35,12 @@ struct SinkLogHandler: LogHandler {
 
 // MARK: - Fixtures
 
-/// Builds `count` metadata entries. The first `publicOutOf` are tagged `.public` and pass through. The rest
-/// are `.sensitive` and get redacted. `publicOutOf == count` redacts nothing. `publicOutOf == 0` redacts
-/// everything.
+/// Creates metadata with `count` entries. The first `publicOutOf` entries are `.public`. The others are
+/// `.sensitive`.
+///
+/// - Parameters:
+///   - count: The number of entries.
+///   - publicOutOf: The number of `.public` entries.
 func makeMetadata(count: Int, publicOutOf: Int) -> Logger.Metadata {
     var metadata = Logger.Metadata()
     for i in 0..<count {
@@ -47,6 +50,9 @@ func makeMetadata(count: Int, publicOutOf: Int) -> Logger.Metadata {
     return metadata
 }
 
+/// Creates a log event with the given metadata.
+///
+/// - Parameter metadata: The metadata of the event.
 func makeEvent(metadata: Logger.Metadata) -> LogEvent {
     LogEvent(
         level: .info,
@@ -61,17 +67,16 @@ func makeEvent(metadata: Logger.Metadata) -> LogEvent {
 
 // MARK: - Benchmarks
 
+/// Registers the `RedactionLogHandler` benchmarks.
 public let benchmarks: @Sendable () -> Void = {
-    // Instructions and allocations. Allocation count is the headline, so a regression that reintroduces a
-    // redundant copy shows up immediately. Built here, not as a global `let`, because `Benchmark.Configuration`
-    // is not Sendable.
+    // Built here, not as a global `let`, because `Benchmark.Configuration` is not Sendable.
     let redactionConfig = Benchmark.Configuration(
         metrics: [.instructions, .objectAllocCount],
         maxIterations: 100_000
     )
-    let redactionLogHandler = RedactionLogHandler(mode: .redacting, wrapping: SinkLogHandler())
+    let redactionLogHandler = RedactionLogHandler(wrapping: SinkLogHandler())
 
-    // Sweep how much of a 4-entry metadata is sensitive: none, half, all.
+    // Vary the number of sensitive entries in a 4-entry metadata: none, half, all.
     let allPublicEvent = makeEvent(metadata: makeMetadata(count: 4, publicOutOf: 4))
     let mixedEvent = makeEvent(metadata: makeMetadata(count: 4, publicOutOf: 2))
     let allSensitiveEvent = makeEvent(metadata: makeMetadata(count: 4, publicOutOf: 0))

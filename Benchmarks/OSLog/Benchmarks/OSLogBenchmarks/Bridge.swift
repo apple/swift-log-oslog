@@ -19,8 +19,14 @@ import SensitivityAttribute
 
 // No `import os` here, so `Logger` unambiguously means swift-log's `Logger`.
 
-/// A `Logger` backed by `OSLogHandler`, with `logLevel` pinned to `.info` so every benchmark measures the enabled
-/// path deterministically regardless of the machine's current unified-logging configuration.
+/// Creates a `Logger` backed by `OSLogHandler`.
+///
+/// The log level is fixed to `.info`, so the unified logging configuration of the machine does not affect the
+/// results.
+///
+/// - Parameters:
+///   - category: The category of the handler and the label of the logger.
+///   - base: The base metadata of the handler.
 private func makeBridgeLogger(category: String, base: Logger.Metadata = [:]) -> Logger {
     var handler = OSLogHandler(subsystem: "com.example.applelogbench", category: category)
     for (key, value) in base {
@@ -31,40 +37,37 @@ private func makeBridgeLogger(category: String, base: Logger.Metadata = [:]) -> 
     return logger
 }
 
-/// The swift-log to OSLogHandler bridge, as a cost ladder over the pure baseline.
+/// Registers the benchmarks that log through swift-log and `OSLogHandler`.
+///
+/// - Parameter configuration: The measurement settings shared by all benchmarks.
 func bridgeBenchmarks(configuration: Benchmark.Configuration) {
-    // Constant message, no metadata. swift-log's base wrapping cost.
+    // A constant message and no metadata.
     let noMetadata = makeBridgeLogger(category: "bridge-nometa")
     Benchmark("bridge_no_metadata", configuration: configuration) { _ in
         noMetadata.info("req")
     }
 
-    // Emission-time metadata. Allocates a Logger.Metadata dictionary and partitions it on every call.
+    // One field passed at each log call.
     let emissionTime = makeBridgeLogger(category: "bridge-emission")
     Benchmark("bridge_emission_time_metadata", configuration: configuration) { _ in
         emissionTime.info("req", metadata: ["id": "\(42, sensitivity: .public)"])
     }
 
-    // The field set on the handler once, as base metadata, with emission-time calls carrying nothing.
-    // OSLogHandler reuses its cached base-metadata partition here: no per-call dictionary allocation and no
-    // re-partition. Compare against `bridge_emission_time_metadata` to see what that cache buys.
+    // The same field, set once on the handler as base metadata. The log calls pass no metadata.
     let baseMetadata: Logger.Metadata = ["id": "\(42, sensitivity: .public)"]
     let withBaseMetadata = makeBridgeLogger(category: "bridge-base", base: baseMetadata)
     Benchmark("bridge_base_metadata", configuration: configuration) { _ in
         withBaseMetadata.info("req")
     }
 
-    // Base context and an emission-time field on the same log. The base partition combines with the
-    // emission-time partition: the cached base string is copied, then the emission-time part is appended.
+    // One base field and one field passed at each log call.
     let baseContext: Logger.Metadata = ["ctx": "\(1, sensitivity: .public)"]
     let withBaseAndEmission = makeBridgeLogger(category: "bridge-both", base: baseContext)
     Benchmark("bridge_base_and_emission_metadata", configuration: configuration) { _ in
         withBaseAndEmission.info("req", metadata: ["id": "\(42, sensitivity: .public)"])
     }
 
-    // A large accumulated base, matching what a long-lived `withLogger(mergingMetadata:)` scope accrues, plus
-    // one emission-time field per log. Measures how the per-emission base-plus-emission cost grows with base
-    // size.
+    // The same, with 24 base entries.
     var largeBase = Logger.Metadata()
     for i in 0..<24 {
         largeBase["ctx-\(i)"] = "\("value-\(i)", sensitivity: .public)"
@@ -74,9 +77,9 @@ func bridgeBenchmarks(configuration: Benchmark.Configuration) {
         withLargeBase.info("req", metadata: ["id": "\(42, sensitivity: .public)"])
     }
 
-    // The end-to-end scope: `withLogger(mergingMetadata:)` accrues the large base once, then several
-    // statements emit inside it, each with an emission-time field. Captures the scope setup cost, amortized
-    // over the emissions, and multiplies the per-emission base-plus-emission cost by the statement count.
+    // A `withLogger(mergingMetadata:)` scope with 24 base entries and 10 log calls that pass one field each. The
+    // outer `withLogger` makes `scopeLogger` the current logger, which the inner call extends. The measurement
+    // includes the scope setup.
     let scopeLogger = makeBridgeLogger(category: "bridge-scope")
     Benchmark("bridge_scope_large_base_multiple_emissions", configuration: configuration) { _ in
         withLogger(scopeLogger) { _ in
