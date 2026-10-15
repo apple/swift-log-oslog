@@ -69,10 +69,21 @@ func makeEvent(metadata: Logger.Metadata) -> LogEvent {
 
 /// Registers the `RedactionLogHandler` benchmarks.
 public let benchmarks: @Sendable () -> Void = {
-    // Built here, not as a global `let`, because `Benchmark.Configuration` is not Sendable.
     let redactionConfig = Benchmark.Configuration(
         metrics: [.instructions, .objectAllocCount],
-        maxIterations: 100_000
+        maxIterations: 100_000,
+        thresholds: [
+            .instructions: BenchmarkThresholds(
+                relative: [
+                    .p90: 10.0  // we only record p90
+                ]
+            ),
+            .objectAllocCount: BenchmarkThresholds(
+                absolute: [
+                    .p90: 0  // we only record p90
+                ]
+            ),
+        ]
     )
     let redactionLogHandler = RedactionLogHandler(wrapping: SinkLogHandler())
 
