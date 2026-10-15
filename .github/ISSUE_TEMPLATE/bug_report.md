@@ -1,3 +1,8 @@
+---
+name: Bug report
+about: Report a problem with Swift Log OSLog
+---
+
 ### Expected behavior
 _[what you expected to happen]_
 
