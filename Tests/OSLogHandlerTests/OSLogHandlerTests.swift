@@ -165,7 +165,7 @@ struct OSLogHandlerTests {
 
         let emission = try #require(handler.emissionTimeMetadata(for: event))
         #expect(emission["error.message"] != nil)
-        #expect(emission["error.type"]?.description.contains("SampleError") == true)
+        #expect(emission["error.type"]?.description.hasSuffix("SampleError") == true)
 
         // Untagged error fields stay private under deny-by-default.
         let (publicString, _) = OSLogHandler.partition(emission)
