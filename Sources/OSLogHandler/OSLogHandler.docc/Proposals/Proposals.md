@@ -7,6 +7,9 @@ Collaborate on API changes to Swift Log OSLog by writing a proposal.
 For non-trivial changes that affect the public API, the Swift Log OSLog project adopts a lightweight version of the
 [Swift Evolution](https://github.com/apple/swift-evolution/blob/main/process.md) process.
 
+The process covers the whole `swift-log-oslog` package. This includes the `OSLogHandler` target and the
+`SensitivityAttribute` target. The `SensitivityAttribute` target contains `Sensitivity` and `RedactionLogHandler`.
+
 Writing a proposal first helps discuss multiple possible solutions early, apply useful feedback from other
 contributors, and avoid reimplementing the same feature multiple times.
 

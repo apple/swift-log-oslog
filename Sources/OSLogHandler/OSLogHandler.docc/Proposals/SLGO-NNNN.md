@@ -11,7 +11,7 @@ Feature abstract – a one sentence summary.
 - Implementation:
   - [apple/swift-log-oslog#1](https://github.com/apple/swift-log-oslog/pull/1)
 - Related links:
-  - [Lightweight proposals process description](https://github.com/apple/swift-log-oslog/blob/main/Sources/SensitivityAttribute/SensitivityAttribute.docc/Proposals/Proposals.md)
+  - [Lightweight proposals process description](https://github.com/apple/swift-log-oslog/blob/main/Sources/OSLogHandler/OSLogHandler.docc/Proposals/Proposals.md)
 
 ### Introduction
 

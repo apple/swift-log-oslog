@@ -55,3 +55,7 @@ Login successful action=password user.id=12345
 ### Creating a handler
 
 - ``OSLogHandler/init(subsystem:category:)``
+
+### Contributing
+
+- <doc:Proposals>

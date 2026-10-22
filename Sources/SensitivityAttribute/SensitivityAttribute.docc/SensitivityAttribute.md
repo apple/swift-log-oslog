@@ -41,7 +41,3 @@ In a development build, install the underlying handler directly, without wrappin
 ### Best practices
 
 - <doc:TestingRedaction>
-
-### Contributing
-
-- <doc:Proposals>
