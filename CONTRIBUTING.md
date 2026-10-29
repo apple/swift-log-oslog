@@ -51,7 +51,7 @@ Your contributions are evaluated on:
 - Maintainability.
 
 You may use productivity tools, including AI-assisted coding, to help you work more efficiently. However, you remain
-fully accountable for all submitted code, issues, pull requests, and comments. AI-generated code must meet the same
+fully accountable for all submitted code, issues, pull requests, and comments. AI-generated content must meet the same
 standards as human-written contributions. Review, validate, and, as needed, refine or rearrange AI-assisted work so the
 final contribution reflects your human creativity, understanding, and control. Use your voice and expression when
 producing written materials. Misuse of AI tools in your contributions and conversations may be considered a violation
@@ -62,8 +62,8 @@ of our [Code of Conduct](https://github.com/apple/.github/blob/main/CODE_OF_COND
 Before submitting an issue:
 
 - Search [existing issues](https://github.com/apple/swift-log-oslog/issues) to avoid duplicates.
-- Write a clear, concise title and a detailed description. Ensure all information is accurate, fully understood by
-  you, and is written in your own voice.
+- Write a clear, concise title and a detailed description. Ensure all information is accurate and fully understood by
+  you.
 - Include precise steps to reproduce the issue, expected behavior, and actual behavior. Verify these steps yourself.
 - Specify your environment, package version, and any relevant configurations. Include the output of
   `swift --version` and `uname -a`.
