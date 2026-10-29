@@ -16,26 +16,26 @@ software with lasting impact.
 ## How you can help
 
 - Report bugs with clear, reproducible steps.
+- Provide feedback on issues and pull requests based on your unique use case.
+- Propose enhancements following the
+  [Proposals process](Sources/OSLogHandler/OSLogHandler.docc/Proposals/Proposals.md).
 - Improve documentation and API reference guides.
-- Add tests covering edge cases in `OSLogHandler` and `SensitivityAttribute`.
-- Triage issues by providing feedback and validation on community reports.
-- Propose enhancements aligned with the
-  [Proposals process](Sources/SensitivityAttribute/SensitivityAttribute.docc/Proposals/Proposals.md).
+- Add tests covering edge cases.
 
-Look for issues tagged [good first issue](#good-first-issues) to have an easy path to get going.
+Look for issues tagged [good first issue](#good-first-issues) to familiarize yourself with the project.
 
 ## Setting up your environment
 
-Prerequisites:
+The package supports the latest patch releases of the
+[last three](https://github.com/swiftlang/project-operations/blob/main/github-policies.md#principles) minor official
+Swift releases.
 
-- Swift 6.2 or newer.
-
-Clone the repository and build:
+Clone the repository and run the tests:
 
 ```bash
 git clone https://github.com/apple/swift-log-oslog.git
 cd swift-log-oslog
-swift build
+swift test
 ```
 
 ## Submitting issues and pull requests
@@ -51,7 +51,7 @@ Your contributions are evaluated on:
 - Maintainability.
 
 You may use productivity tools, including AI-assisted coding, to help you work more efficiently. However, you remain
-fully accountable for all submitted code, issues, pull requests, and comments. AI-generated content must meet the same
+fully accountable for all submitted code, issues, pull requests, and comments. AI-generated code must meet the same
 standards as human-written contributions. Review, validate, and, as needed, refine or rearrange AI-assisted work so the
 final contribution reflects your human creativity, understanding, and control. Use your voice and expression when
 producing written materials. Misuse of AI tools in your contributions and conversations may be considered a violation
@@ -62,21 +62,21 @@ of our [Code of Conduct](https://github.com/apple/.github/blob/main/CODE_OF_COND
 Before submitting an issue:
 
 - Search [existing issues](https://github.com/apple/swift-log-oslog/issues) to avoid duplicates.
-- Write a clear, concise title and a detailed description. Ensure all information is accurate and fully understood by
-  you.
+- Write a clear, concise title and a detailed description. Ensure all information is accurate, fully understood by
+  you, and is written in your own voice.
 - Include precise steps to reproduce the issue, expected behavior, and actual behavior. Verify these steps yourself.
-- Specify your environment, Swift Log OSLog version, or any relevant configurations. Include the output of
+- Specify your environment, package version, and any relevant configurations. Include the output of
   `swift --version` and `uname -a`.
 - Explain the severity and impact of the problem.
-- For security issues, see the [Swift Log OSLog security advisories](https://github.com/apple/swift-log-oslog/security).
-  Do not open a public GitHub issue.
+- For security issues, file a [security advisory](https://github.com/apple/swift-log-oslog/security). Do not open a
+  public GitHub issue.
 
 Please follow the [issue template](https://github.com/apple/swift-log-oslog/issues/new?template=bug_report.md) when you
 describe the issue.
 
 #### Good first issues
 
-[Good first issues](https://github.com/apple/swift-log-oslog/contribute) are mentoring opportunities. They help you
+[Good first issues](https://github.com/apple/swift-log-oslog/contribute) are learning opportunities. They help you
 learn the codebase, build your foundation as a contributor, and grow into an active participant in the community.
 
 These issues are about the journey, not the fastest path to a solution. If you use AI-assisted tools on these issues,
@@ -87,7 +87,7 @@ standards above.
 
 We welcome feature requests. Describe the proposed changes needed and why they matter in an issue. Please do not start
 with a pull request. When a new feature starts taking shape, follow the
-[Proposals process](Sources/SensitivityAttribute/SensitivityAttribute.docc/Proposals/Proposals.md) to open a new
+[Proposals process](Sources/OSLogHandler/OSLogHandler.docc/Proposals/Proposals.md) to open a new
 proposal and have an opportunity to discuss it with a broader community.
 
 ### Pull requests
@@ -100,30 +100,34 @@ expectations:
 
 - Address the stated problem or feature request completely and effectively. You must fully understand and validate your
   proposed solution.
-- Solutions must be thorough, handle edge cases, and integrate cleanly.
+- Ensure the solution is thorough, handles edge cases, and integrates cleanly.
 - Include comprehensive tests that validate your changes and prevent regressions.
-- Please, follow the [pull request template](.github/PULL_REQUEST_TEMPLATE.md) when you describe your PR.
-- Make sure automated CI passes for your PR. Ask maintainers for guidance when unsure how to interpret CI results.
-- Not yet ready for a review, but want to check the CI or share code changes in a discussion? Open a draft pull
-  request. You can mark it Ready for review later.
+- Follow the [pull request template](.github/PULL_REQUEST_TEMPLATE.md) when you describe your PR.
+- Make sure [automated CI checks](#running-ci-jobs-locally) pass for your PR. Ask for guidance when unsure how to
+  interpret CI results. CI runs automatically on every pull request. It builds and tests on macOS, Linux, Windows,
+  Android, and Wasm, and it runs the benchmarks. Contributions from external contributors require maintainer approval to
+  run workflows.
+
+Not yet ready for a review, but want to share code changes in a discussion? Open a draft pull request. You can mark it
+Ready for review later.
 
 #### Pull request style guide and format
 
 Follow our coding style and formatting to maintain a consistent, readable codebase.
 
-- Conform to the established Swift Log protocol design patterns.
+- Conform to the established protocols and design patterns.
 - The package depends on swift-log only. Discuss any new dependency in an issue first.
-- Format code using `swift-format -r -i .` in the repository root before you push.
+- Format code using `swift-format -r -i -p .` in the repository root before you push.
 - Add the license header to every new source file. Copy it from an existing file.
 - Write documentation that's clear and to the point. Explain the _why_ behind non-obvious decisions. Avoid repeated
   explanations and restating the implementation in prose.
-- Write clear, concise, and descriptive commit messages.
+- Write a clear and concise pull request description following the template and the Code of Conduct.
 
 #### Testing
 
 All contributions require thorough testing across all the platforms and Swift versions the package supports.
 
-**Local testing**: Ensure all existing tests pass before submitting:
+**Local testing**: Ensure all existing tests pass on your host platform before submitting:
 
 ```bash
 swift test
@@ -165,10 +169,7 @@ swift package --package-path Benchmarks/OSLog --allow-writing-to-package-directo
 For more information, see `swift package benchmark --help` and the
 [documentation of package-benchmark](https://swiftpackageindex.com/ordo-one/package-benchmark/documentation/benchmark).
 
-#### Running CI
-
-CI runs automatically on every pull request. It builds and tests on macOS, Linux, Windows, Android, and Wasm, and it
-runs the benchmarks. Contributions from external contributors require maintainer approval to run workflows.
+#### Running CI jobs locally
 
 You can run the GitHub Actions workflows locally using [act](https://github.com/nektos/act). To run all the jobs that
 run on a pull request, use the following command:
@@ -178,10 +179,10 @@ act pull_request
 ```
 
 To run just a single job, use `workflow_call -j <job>`, and specify the inputs the job expects. For example, to run just
-shellcheck:
+format check:
 
 ```bash
-act workflow_call -j soundness --input shell_check_enabled=true
+act workflow_call -j soundness --input format_check_enabled=true
 ```
 
 ## Code of conduct
