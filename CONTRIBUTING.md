@@ -76,7 +76,7 @@ describe the issue.
 
 #### Good first issues
 
-[Good first issues](https://github.com/apple/swift-log-oslog/contribute) are learning opportunities. They help you
+[Good first issues](https://github.com/apple/swift-log-oslog/contribute) are mentoring opportunities. They help you
 learn the codebase, build your foundation as a contributor, and grow into an active participant in the community.
 
 These issues are about the journey, not the fastest path to a solution. If you use AI-assisted tools on these issues,
@@ -121,7 +121,8 @@ Follow our coding style and formatting to maintain a consistent, readable codeba
 - Add the license header to every new source file. Copy it from an existing file.
 - Write documentation that's clear and to the point. Explain the _why_ behind non-obvious decisions. Avoid repeated
   explanations and restating the implementation in prose.
-- Write a clear and concise pull request description following the template and the Code of Conduct.
+- Write a clear and concise pull request description following the template and the
+  [Code of Conduct](https://github.com/apple/.github/blob/main/CODE_OF_CONDUCT.md).
 
 #### Testing
 
