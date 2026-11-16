@@ -14,9 +14,6 @@ jobs:
     name: Tests
     uses: swiftlang/github-workflows/.github/workflows/package_test.yml@de9be1265c5295ff156804d313f100d1ca591628
     with:
-      linux_command: |
-        Debug-Test: swift test
-        Release-Build: swift build -c release
       windows_env_vars: '{"COMMON_SWIFT_FLAGS": "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"}'
       windows_command: |
         Debug-Test:
@@ -32,6 +29,7 @@ jobs:
           command: swift build -c release %COMMON_SWIFT_FLAGS%
           versions: ["nightly-release", "nightly-main"]
       # The Windows runner installs a pinned Swift patch release. The container image tracks the newest patch release.
+      # Context: https://github.com/swiftlang/github-workflows/issues/356
       windows_use_docker: true
       # Strict flags for the release toolchains. The nightly toolchains skip -warnings-as-errors.
       linux_version_overrides: |
@@ -62,5 +60,5 @@ jobs:
       benchmark_package_paths: '["Benchmarks/OSLog", "Benchmarks/Redaction"]'
       enable_linux: false
       enable_macos: true
-      macos_swift_versions: '["6.4"]'
+      macos_swift_versions: '["current"]'
       macos_runner_pool: nightly
