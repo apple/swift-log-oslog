@@ -24,6 +24,7 @@ import Benchmark
 public let benchmarks: @Sendable () -> Void = {
     let configuration = Benchmark.Configuration(
         metrics: [.instructions, .objectAllocCount],
+        scalingFactor: .kilo,
         maxIterations: 100_000,
         thresholds: [
             .instructions: BenchmarkThresholds(
