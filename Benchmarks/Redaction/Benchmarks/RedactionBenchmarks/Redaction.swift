@@ -71,6 +71,7 @@ func makeEvent(metadata: Logger.Metadata) -> LogEvent {
 public let benchmarks: @Sendable () -> Void = {
     let redactionConfig = Benchmark.Configuration(
         metrics: [.instructions, .objectAllocCount],
+        scalingFactor: .kilo,
         maxIterations: 100_000,
         thresholds: [
             .instructions: BenchmarkThresholds(
@@ -92,13 +93,19 @@ public let benchmarks: @Sendable () -> Void = {
     let mixedEvent = makeEvent(metadata: makeMetadata(count: 4, publicOutOf: 2))
     let allSensitiveEvent = makeEvent(metadata: makeMetadata(count: 4, publicOutOf: 0))
 
-    Benchmark("redacting_0_of_4", configuration: redactionConfig) { _ in
-        redactionLogHandler.log(event: allPublicEvent)
+    Benchmark("redacting_0_of_4", configuration: redactionConfig) { benchmark in
+        for _ in benchmark.scaledIterations {
+            redactionLogHandler.log(event: allPublicEvent)
+        }
     }
-    Benchmark("redacting_2_of_4", configuration: redactionConfig) { _ in
-        redactionLogHandler.log(event: mixedEvent)
+    Benchmark("redacting_2_of_4", configuration: redactionConfig) { benchmark in
+        for _ in benchmark.scaledIterations {
+            redactionLogHandler.log(event: mixedEvent)
+        }
     }
-    Benchmark("redacting_4_of_4", configuration: redactionConfig) { _ in
-        redactionLogHandler.log(event: allSensitiveEvent)
+    Benchmark("redacting_4_of_4", configuration: redactionConfig) { benchmark in
+        for _ in benchmark.scaledIterations {
+            redactionLogHandler.log(event: allSensitiveEvent)
+        }
     }
 }
