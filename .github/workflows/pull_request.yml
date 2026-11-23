@@ -10,13 +10,13 @@ on:
 jobs:
   soundness:
     name: Soundness
-    uses: swiftlang/github-workflows/.github/workflows/soundness.yml@0.0.18
+    uses: swiftlang/github-workflows/.github/workflows/soundness.yml@0.0.19
     with:
       license_header_check_project_name: "Swift Logging API"
 
   tests:
     name: Tests
-    uses: swiftlang/github-workflows/.github/workflows/package_test.yml@0.0.18
+    uses: swiftlang/github-workflows/.github/workflows/package_test.yml@0.0.19
     with:
       windows_env_vars: '{"COMMON_SWIFT_FLAGS": "--explicit-target-dependency-import-check error -Xswiftc -require-explicit-sendable"}'
       windows_command: |
@@ -59,7 +59,7 @@ jobs:
 
   macos-benchmarks:
     name: macOS benchmarks
-    uses: swiftlang/github-workflows/.github/workflows/benchmarks.yml@0.0.18
+    uses: swiftlang/github-workflows/.github/workflows/benchmarks.yml@0.0.19
     with:
       benchmark_package_paths: '["Benchmarks/OSLog", "Benchmarks/Redaction"]'
       enable_linux: false
